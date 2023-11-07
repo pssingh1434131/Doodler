@@ -1,8 +1,11 @@
-body{
-  background-image: url('../public/background.png'); 
-  background-size: cover; 
-  background-position: center; 
-  background-repeat: no-repeat; 
+body {
+  background: linear-gradient(
+      rgba(255, 255, 255, 0.001),
+      rgba(255, 255, 255, 0.001)
+    ),
+    url("./background.png") center/cover no-repeat;
+  height: 100vh;
+  background-blend-mode: overlay;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -19,7 +22,8 @@ body{
   font-size: calc(10px + 18vmin);
   color: white;
   font-family: Agbalumo;
-  width: 50%
+  width: 50%;
+  text-shadow: 3px 3px 5px #4b4949;
 }
 
 @keyframes App-logo-spin {
@@ -29,4 +33,11 @@ body{
   to {
     transform: rotate(360deg);
   }
+}
+
+.playbtn{
+  width: 80%;
+  height: 3rem;
+  margin: 10px;
+  cursor: pointer;
 }

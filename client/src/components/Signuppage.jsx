@@ -2,11 +2,11 @@ import React from "react";
 import Signup from "./Signup";
 import logo from "../logo192.png";
 
-function Loginpage() {
+function Loginpage(props) {
   return (
     <div
       className="App d-flex justify-content-around align-items-center"
-      style={{ height: "100vh" }}
+      style={{ height: "100vh"}}
     >
         <header className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
