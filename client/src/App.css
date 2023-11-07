@@ -38,6 +38,7 @@ body {
 .playbtn{
   width: 80%;
   height: 3rem;
-  margin: 10px;
+  margin: 20px auto;
   cursor: pointer;
+  color: white;
 }
