@@ -42,3 +42,107 @@ module.exports.login = async(req, res)=>{
         return res.status(400).json({success: false});
     }
 }
+
+module.exports.updatename = async(req, res)=>{
+    try{
+        const {name} = req.body;
+        const user = await userModel.findById({_id:req.id});
+        user.name = name;
+        const updatedData = await userModel.updateOne({_id:id},user,{new:true});
+        return res.json({ success: true})
+    }
+    catch(err){
+        return res.status(400).json({success: false});
+    }
+}
+
+module.exports.updatepassword = async(req, res)=>{
+    try{
+        const {oldpassword,newpassword} = req.body;
+        const user = await userModel.findById({_id:req.id});
+        const passwordCompare = await bcrypt.compare(oldpassword, user.password);
+        if(passwordCompare)
+        {
+            const salt = await bcrypt.genSalt(10);
+            const secPass = await bcrypt.hash(newpassword, salt);
+            user.password = secPass;
+            const updatedData = await userModel.updateOne({_id:id},user,{new:true});
+        }
+        else{
+            return res.status(400).json({ success: false});
+        }
+        return res.json({ success: true});
+    }
+    catch(err){
+        return res.status(400).json({success: false});
+    }
+}
+
+module.exports.updateavatar = async(req, res)=>{
+    try{
+        const {avatar} = req.body;
+        const user = await userModel.findById({_id:req.id});
+        user.image = avatar;
+        const updatedData = await userModel.updateOne({_id:id},user,{new:true});
+        return res.json({ success: true});
+    }
+    catch(err){
+        return res.status(400).json({success: false});
+    }
+}
+
+module.exports.getuser = async(req, res)=>{
+    try{
+        const user = await userModel.findById({_id:req.id});
+        return res.json({ success: true,user:user});
+    }
+    catch(err){
+        return res.status(400).json({success: false});
+    }
+}
+
+module.exports.logout = function logout(req,res)
+{
+    res.cookie('isloggedin','',{maxAge:1});
+    res.json({ success: true});
+}
+
+//protect route
+module.exports.protectRoute = async function protectRoute(req,res,next)
+{
+    try{
+        let token;
+        if(req.cookies.isloggedin)
+        {
+            token = req.cookies.isloggedin;
+            let payload=jwt.verify(token,jwt_key);
+            if(payload)
+            {
+                const user = await userModel.findById(payload.payload);
+                req.role = user.role;
+                req.id = user.id;
+                req.user=user;
+                next();
+            }
+            else{
+                return res.status(400).json({
+                    message:"user not verified",
+                    success: false
+                })
+            }
+        }
+        else{
+            return res.status(400).json({
+                message:"please login again",
+                success: false
+            })
+        }
+    }
+    catch(err)
+    {
+        return res.status(400).json({
+            message:err.message,
+            success: false
+        })
+    }
+}
