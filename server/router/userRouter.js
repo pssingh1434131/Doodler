@@ -29,6 +29,6 @@ userRouter
 
 userRouter
 .route('/logout')
-.patch(logout)
+.post(logout)
 
 module.exports = userRouter;

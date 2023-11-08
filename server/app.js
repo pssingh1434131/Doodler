@@ -14,7 +14,9 @@ app.use(cookieparser());
 app.use(express.json());
 const corsOptions = {
     origin: 'http://localhost:3000',
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 200,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true
 };
 app.use(cors(corsOptions));
 const port = 3001;

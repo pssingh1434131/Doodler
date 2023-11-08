@@ -36,7 +36,7 @@ module.exports.login = async(req, res)=>{
         const uid = user['_id'];
         const authtoken = jwt.sign({payload: uid}, jwt_key);
         res.cookie('isloggedin',authtoken,{httpOnly:true});
-        return res.json({ success: true})
+        return res.json({ success: true, user: {name:user.name, username: user.username, email:user.email, image: user.image},token:authtoken});
     }
     catch(err){
         return res.status(400).json({success: false});
@@ -48,7 +48,7 @@ module.exports.updatename = async(req, res)=>{
         const {name} = req.body;
         const user = await userModel.findById({_id:req.id});
         user.name = name;
-        const updatedData = await userModel.updateOne({_id:id},user,{new:true});
+        const updatedData = await user.save();
         return res.json({ success: true})
     }
     catch(err){
@@ -66,7 +66,7 @@ module.exports.updatepassword = async(req, res)=>{
             const salt = await bcrypt.genSalt(10);
             const secPass = await bcrypt.hash(newpassword, salt);
             user.password = secPass;
-            const updatedData = await userModel.updateOne({_id:id},user,{new:true});
+            const updatedData = await user.save();
         }
         else{
             return res.status(400).json({ success: false});
@@ -83,7 +83,7 @@ module.exports.updateavatar = async(req, res)=>{
         const {avatar} = req.body;
         const user = await userModel.findById({_id:req.id});
         user.image = avatar;
-        const updatedData = await userModel.updateOne({_id:id},user,{new:true});
+        const updatedData = await user.save();
         return res.json({ success: true});
     }
     catch(err){
@@ -103,8 +103,8 @@ module.exports.getuser = async(req, res)=>{
 
 module.exports.logout = function logout(req,res)
 {
-    res.cookie('isloggedin','',{maxAge:1});
-    res.json({ success: true});
+    res.cookie('isloggedin','',{maxAge:0});
+    return res.json({ success: true});
 }
 
 //protect route
@@ -119,7 +119,6 @@ module.exports.protectRoute = async function protectRoute(req,res,next)
             if(payload)
             {
                 const user = await userModel.findById(payload.payload);
-                req.role = user.role;
                 req.id = user.id;
                 req.user=user;
                 next();

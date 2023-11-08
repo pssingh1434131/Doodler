@@ -20,17 +20,18 @@ export default function Login() {
         headers: {
             'Content-Type': 'application/json'
         },
+        credentials:'include',
         body: JSON.stringify(formData)
     });
     const json = await response.json();
-    console.log(json);
-    if (json.success){
+    if (json.success) {
+        localStorage.setItem('user', JSON.stringify(json.user));
         navigate("/home");
-    }
-    else{
+    } else {
         alert("Invalid credentials");
     }
 }
+
 
   return (
       <form style={{width:'50%'}}>
