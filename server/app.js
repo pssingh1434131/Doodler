@@ -26,5 +26,7 @@ server.listen(port, () => {
 });
 
 const userRouter = require("./router/userRouter");
+const gameRouter = require("./router/gameRouter");
 
 app.use("/user", userRouter);
+app.use("/game", gameRouter);
