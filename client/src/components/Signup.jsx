@@ -43,10 +43,10 @@ function Signup() {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
+        credentials:"include"
     });
     const json = await response.json();
-    console.log(json);
     if (json.success){
       navigate("/");
     }

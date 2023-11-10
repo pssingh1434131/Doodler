@@ -58,7 +58,7 @@ function HomeBody() {
           </div>
         </div>}
         <div style={{ width: '45%', height: '95%' }}>
-            <Friend/>
+            <Friend user={user} />
         </div>
       </div>
     </div>
