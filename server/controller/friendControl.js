@@ -43,7 +43,7 @@ module.exports.receiveFriendRequest = async(req, res)=>{
 module.exports.deleteFriendRequest = async(req, res)=>{
     try{
         let id = req.body.id;
-        const deletereq = await friendRequest.findByIdAndDelete({id});
+        const deletereq = await friendRequest.findByIdAndDelete(id);
         return res.json({success:true});
     }catch(err){
         return res.status(400).json({success: false});
@@ -52,10 +52,25 @@ module.exports.deleteFriendRequest = async(req, res)=>{
 
 module.exports.deleteFriendship = async(req, res)=>{
     try{
-        let prsn1 = req.body.person1, prsn2 = req.body.person2;
-        const deletefriend = await friendship.deleteOne({person1:prsn1, person2: prsn2});
+        let id = req.body.id;
+        const deletefriend = await friendship.findByIdAndDelete(id);
         return res.json({success:true});
     }catch(err){
         return res.status(400).json({success: false});
     }
 }
+
+module.exports.acceptFriendreq = async (req, res) => {
+    try {
+        let id = req.body.id;
+        
+        const deletereq = await friendRequest.findByIdAndDelete(id);
+        
+        const friends = await friendship.create({ person1: deletereq.from, person2: deletereq.to });
+        
+        return res.json({ success: true, friends });
+    } catch (err) {
+        console.error(err);
+        return res.status(400).json({ success: false });
+    }
+};

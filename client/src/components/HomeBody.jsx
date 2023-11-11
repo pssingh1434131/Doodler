@@ -55,6 +55,10 @@ function HomeBody() {
                 </div>
               );
             })}
+
+            {
+              gameHistory.length===0&&<div style={{fontSize:'3vh'}}>No Game to show</div>
+            }
           </div>
         </div>}
         <div style={{ width: '45%', height: '95%' }}>
