@@ -26,8 +26,7 @@ function Friend(props) {
         });
         const json = await response.json();
         if (json.success) {
-            // socket.emit("send_message", { from: props.user.username, to: friendid, date: Date.now() }, friendid);
-            socket.emit('friendRequest', { to: friendid, from: props.user.username });
+            socket.emit('friendRequest', json.request);
         }
         else {
             alert("Invalid credentials");
@@ -46,7 +45,6 @@ function Friend(props) {
         });
         const json = await response.json();
         if (json.success) {
-            // Create a new array without the deleted element
             const updatedFriendReq = [...friendreq.slice(0, index), ...friendreq.slice(index + 1)];
             addfriendreq(updatedFriendReq);
         } else {
@@ -65,7 +63,6 @@ function Friend(props) {
         });
         const json = await response.json();
         if (json.success) {
-            // Create a new array without the deleted element
             const updatedFriends = [...friends.slice(0, index), ...friends.slice(index + 1)];
             setfriends(updatedFriends);
         } else {
@@ -84,33 +81,32 @@ function Friend(props) {
         });
         const json = await response.json();
         if (json.success) {
-            // Create a new array without the deleted element
             const updatedFriendReq = [...friendreq.slice(0, index), ...friendreq.slice(index + 1)];
             addfriendreq(updatedFriendReq);
-            
-            // Push the single friend object into the friends array
             setfriends([...friends, json.friends]);
         } else {
             alert("Invalid credentials");
         }
     };
     
-
-
     const refreq = useRef();
     const showRequest = () => {
         refreq.current.click();
     };
 
     useEffect(() => {
-        socket.on('friendRequest', (data) => {
+        const friendRequestListener = (data) => {
             addfriendreq((prevFriendReq) => [data, ...prevFriendReq]);
             setlivereq(true);
-        });
-      }, []);
-
+        };
+    
+        socket.on('friendRequest', friendRequestListener);
+        return () => {
+            socket.off('friendRequest', friendRequestListener);
+        };
+    }, [addfriendreq, setlivereq]);
+    
     useEffect(() => {
-        // Define addfriendlist function
         const addfriendlist = async () => {
             try {
                 const response = await fetch("http://localhost:3001/friend/receivedRequest", {
@@ -135,13 +131,7 @@ function Friend(props) {
                 console.error('Error fetching friend requests:', error);
             }
         };
-    
-        // Execute addfriendlist only once on mount
         addfriendlist();
-    
-        // Subscribe to socket events and fetch friends
-        
-    
         const findfriends = async () => {
             try {
                 const response = await fetch("http://localhost:3001/friend/getFriends", {
@@ -166,11 +156,7 @@ function Friend(props) {
                 console.error('Error fetching friend requests:', error);
             }
         };
-    
-        // Execute findfriends whenever the component mounts or updates
         findfriends();
-    
-        // Cleanup: Unsubscribe from socket events on component unmount
     }, [addfriendreq, setfriends, setlivereq]);
     
 

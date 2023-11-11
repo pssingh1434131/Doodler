@@ -23,7 +23,7 @@ module.exports.sendFriendRequest = async(req, res)=>{
         let touser = req.body.to;
         let fromuser = req.user.username;
         const request = await friendRequest.create({from: fromuser, to: touser});
-        return res.json({success:true});
+        return res.json({success:true, request});
     }catch(err){
         return res.status(400).json({success: false});
     }
@@ -63,7 +63,6 @@ module.exports.deleteFriendship = async(req, res)=>{
 module.exports.acceptFriendreq = async (req, res) => {
     try {
         let id = req.body.id;
-        
         const deletereq = await friendRequest.findByIdAndDelete(id);
         
         const friends = await friendship.create({ person1: deletereq.from, person2: deletereq.to });
