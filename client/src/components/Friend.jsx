@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from "socket.io-client";
-const socket = io.connect("http://localhost:3001");
+let socket = io.connect("http://localhost:3001");
 
 function Friend(props) {
 
@@ -9,156 +9,71 @@ function Friend(props) {
     const [livereq, setlivereq] = useState(false);
     const [friends, setfriends] = useState([]);
 
+    useEffect(() => {
+        socket.emit("join_room", props.user.username);
+        return () => {
+            // socket.disconnect();
+        };
+    }, [props.user.username]);
+
     const onchange = (event) => {
         changeid(event.target.value);
     };
 
-   socket.emit("join_room", props.user.username);
+    socket.on('getpendingreq',(data)=>{
+            addfriendreq(data);
+            if(data.length>0) setlivereq(true);
+    })
+
+    socket.on('getcurfriends',(data)=>{
+            setfriends(data);
+            console.log(data);
+    })
 
     const sendRequest = async () => {
-        const response = await fetch("http://localhost:3001/friend/sendRequest", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ to: friendid }),
-            credentials:'include'
+        socket.emit('sendrequest',{ to: friendid, from: props.user.username},(response)=>{
+            alert(response);
         });
-        const json = await response.json();
-        if (json.success) {
-            socket.emit('friendRequest', json.request);
-        }
-        else {
-            alert("Invalid credentials");
-        }
         changeid('');
     };
 
     const deleteRequest = async (index, _id) => {
-        const response = await fetch("http://localhost:3001/friend/deleteRequest", {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({id: _id}),
-            credentials:'include'
-        });
-        const json = await response.json();
-        if (json.success) {
-            const updatedFriendReq = [...friendreq.slice(0, index), ...friendreq.slice(index + 1)];
-            addfriendreq(updatedFriendReq);
-        } else {
-            alert("Invalid credentials");
-        }
+        socket.emit('deletereq',{id:_id},(response)=>{
+            if(response.success) {
+                const updatedFriendReq = [...friendreq.slice(0, index), ...friendreq.slice(index + 1)];
+                addfriendreq(updatedFriendReq);
+                if(friendreq.length===0) setlivereq(false);
+            }
+            alert(response.msg);
+        })
     };
-    
+
     const deletefriend = async (index, _id) => {
-        const response = await fetch("http://localhost:3001/friend/deleteFriend", {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({id: _id}),
-            credentials:'include'
-        });
-        const json = await response.json();
-        if (json.success) {
-            const updatedFriends = [...friends.slice(0, index), ...friends.slice(index + 1)];
-            setfriends(updatedFriends);
-        } else {
-            alert("Invalid credentials");
-        }
+        socket.emit('deletefreind',{id:_id,username:props.user.username},(response)=>{
+            if(response.success) {
+                const updatedFriendReq = [...friends.slice(0, index), ...friends.slice(index + 1)];
+                setfriends(updatedFriendReq);
+            }
+            alert(response.msg);
+        })
     };
     
     const acceptRequest = async (index, _id) => {
-        const response = await fetch("http://localhost:3001/friend/acceptRequest", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({id: _id}),
-            credentials:'include'
-        });
-        const json = await response.json();
-        if (json.success) {
-            const updatedFriendReq = [...friendreq.slice(0, index), ...friendreq.slice(index + 1)];
-            addfriendreq(updatedFriendReq);
-            setfriends([...friends, json.friends]);
-        } else {
-            alert("Invalid credentials");
-        }
+        socket.emit('acceptRequest',{id:_id,username:props.user.username},(response)=>{
+            if(response.success) {
+                const updatedFriendReq = [...friendreq.slice(0, index), ...friendreq.slice(index + 1)];
+                addfriendreq(updatedFriendReq);
+                if(friendreq.length===0) setlivereq(false);
+                setfriends([...friends, response.friends]);
+            }
+            alert(response.msg);
+        })
     };
-    
+
     const refreq = useRef();
     const showRequest = () => {
         refreq.current.click();
     };
-
-    useEffect(() => {
-        const friendRequestListener = (data) => {
-            addfriendreq((prevFriendReq) => [data, ...prevFriendReq]);
-            setlivereq(true);
-        };
-    
-        socket.on('friendRequest', friendRequestListener);
-        return () => {
-            socket.off('friendRequest', friendRequestListener);
-        };
-    }, [addfriendreq, setlivereq]);
-    
-    useEffect(() => {
-        const addfriendlist = async () => {
-            try {
-                const response = await fetch("http://localhost:3001/friend/receivedRequest", {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    credentials: "include",
-                });
-                const datat = await response.json();
-                if (!datat.success) {
-                    alert("cannot fetch friend requests");
-                    return;
-                }
-                const data = datat.receivedRequest;
-                if (Array.isArray(data)) {
-                    addfriendreq(data);
-                } else {
-                    console.error('Retrieved data is not an array:', data);
-                }
-            } catch (error) {
-                console.error('Error fetching friend requests:', error);
-            }
-        };
-        addfriendlist();
-        const findfriends = async () => {
-            try {
-                const response = await fetch("http://localhost:3001/friend/getFriends", {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    credentials: "include",
-                });
-                const datat = await response.json();
-                if (!datat.success) {
-                    alert("cannot fetch friends");
-                    return;
-                }
-                const data = datat.friendlist;
-                if (Array.isArray(data)) {
-                    setfriends(data);
-                } else {
-                    console.error('Retrieved data is not an array:', data);
-                }
-            } catch (error) {
-                console.error('Error fetching friend requests:', error);
-            }
-        };
-        findfriends();
-    }, [addfriendreq, setfriends, setlivereq]);
-    
 
     function timeAgo(timestamp) {
         const now = new Date();
