@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const cookieparser = require('cookie-parser');
 const { Server } = require('socket.io');
 const {getFriends, sendFriendRequest, receiveFriendRequest, deleteFriendRequest, acceptFriendreq, deleteFriendship} = require('./controller/friendControl');
-
+const { addUser, getUser, removeUser } = require("./utils/users");
 
 const app = express();
 const server = http.createServer(app);
@@ -49,6 +49,8 @@ const friendRouter = require('./router/friends');
 app.use('/user', userRouter);
 app.use('/game', gameRouter);
 app.use('/friend', friendRouter);
+
+let userRoom,imgUrl;
 
 io.on('connection', (socket) => {
   socket.on("join_room", async (username) => {
@@ -112,6 +114,52 @@ io.on('connection', (socket) => {
       callback({success:true,msg:'accepted request',friends: data.data});
     }
     else callback({success:false,msg:'error in accepting the request',friends: null});
+  })
+
+  socket.on("userJoined", (data) => {
+    const { name, userId, roomId, host, presenter} = data;
+    userRoom = roomId;
+    socket.join(roomId);
+    
+    const users = addUser({ name, userId, roomId, host, presenter, socketId:socket.id });
+
+    socket.emit("userIsJoined", { success: true, users });
+    socket.broadcast.to(userRoom).emit("userJoinedMessageBroadcasted", name)
+
+    socket.broadcast.to(userRoom).emit("allUsers", users)
+
+    //console.log("imgUrl-> joined")
+    socket.broadcast.to(userRoom).emit("whiteBoardDataResponse", {
+      imgURL: imgUrl,
+    });
+});
+
+socket.on("whiteboardData", (data) => {
+    imgUrl = data;
+    //console.log("updated image->")
+    socket.broadcast.to(userRoom).emit("whiteBoardDataResponse", {
+      imgURL: data,
+    });
+});
+
+  socket.on("message", (data)=>{
+    const {message} = data;
+    const user = getUser(socket.id);
+    if(user){
+      socket.broadcast.to(userRoom).emit("messageResponse", {message, name: user.name})
+    }
+    
+  })
+
+
+  socket.on("disconnect", (data)=>{
+    const user = getUser(socket.id);
+    //console.log("disconnected",user);
+    if(user){
+      removeUser(socket.id);
+      socket.broadcast.to(userRoom).emit("userLeftMessageBroadcasted", user.name)
+    }
+    
   })
 
 });

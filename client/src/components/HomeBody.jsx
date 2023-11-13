@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Friend from './Friend';
+import {Link} from "react-router-dom"
 
 function HomeBody() {
   const [gameHistory, setgameHistory] = useState([]);
@@ -32,9 +33,9 @@ function HomeBody() {
     <div className='d-flex' style={{ width: '100vw', padding: '0 18vw' }}>
       <div className="d-flex justify-content-center align-item-center flex-column" style={{ height: '60vh', flex: '0.3', backgroundColor: 'rgba(68, 68, 193, 0.8)', borderRadius: '50px 0 0 50px' }}>
         <strong style={{ textAlign: 'center', color: 'white', fontSize: '40px', textDecoration: 'underline' }}>PLAY NOW</strong>
-        <button className='playbtn' style={{ backgroundColor: 'red', minHeight:'fit-content' }}>PLAY ONLINE</button>
-        <button className='playbtn' style={{ backgroundColor: 'green',minHeight:'fit-content'  }}>PLAY WITH FRIENDS</button>
-        <button className='playbtn' style={{ backgroundColor: 'blue', minHeight:'fit-content'  }}>PLAY WITH COMPUTER</button>
+        <Link style={{textAlign:'center'}} to='/play'><button className='playbtn' style={{ backgroundColor: 'red', minHeight:'fit-content' }}>PLAY ONLINE</button></Link>
+        <Link style={{textAlign:'center'}} to='/play'><button className='playbtn' style={{ backgroundColor: 'green',minHeight:'fit-content'  }}>PLAY WITH FRIENDS</button></Link>
+        <Link style={{textAlign:'center'}} to='/play'><button className='playbtn' style={{ backgroundColor: 'blue', minHeight:'fit-content'  }}>PLAY WITH COMPUTER</button></Link>
       </div>
       <div className='d-flex align-items-center justify-content-around flex-row' style={{ height: '60vh', color: 'white', flex: '0.7', backgroundColor: 'rgba(68, 68, 193, 0.8)', borderRadius: ' 0 50px 50px 0', borderLeft: "3px solid white" }}>
         {gameHistory && <div className='d-flex align-items-center flex-column' style={{ width: '45%', height: '95%', justifyContent: 'space-evenly' }}>

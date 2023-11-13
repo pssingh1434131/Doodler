@@ -27,7 +27,6 @@ function Friend(props) {
 
     socket.on('getcurfriends',(data)=>{
             setfriends(data);
-            console.log(data);
     })
 
     const sendRequest = async () => {
