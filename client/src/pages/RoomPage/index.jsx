@@ -54,7 +54,7 @@ const RoomPage = ({ user, socket, users }) => {
     <button 
         type="button" 
         className="btn btn-dark"
-        style={{display: "block", position: "absolute", top: "4%", left: "3%", height: "40px", width: "100px" }}
+        style={{display: "block", position: "absolute", top: "4%", left: "3%", height: "40px", width: "100px" , zIndex: 1 }}
         onClick={()=>setOpenedUserTab(true)} 
     > 
     Users 
@@ -62,7 +62,7 @@ const RoomPage = ({ user, socket, users }) => {
     <button 
         type="button" 
         className="btn btn-primary"
-        style={{display: "block", position: "absolute", top: "4%", left: "11%", height: "40px", width: "100px" }}
+        style={{display: "block", position: "absolute", top: "4%", left: "11%", height: "40px", width: "100px", zIndex:1}}
         onClick={()=>setOpenedChatTab(true)} 
     > 
     Chats
@@ -71,7 +71,7 @@ const RoomPage = ({ user, socket, users }) => {
         openedUserTab && (
             <div 
                 className="position-fixed top-0 h-100 text-white bg-dark" 
-                style={{width:"250px", left: "0%"}}> 
+                style={{width:"250px", left: "0%",zIndex: 2, background: "white"}}> 
                 <button 
                 type="button" 
                 onClick={()=>setOpenedUserTab(false)} 

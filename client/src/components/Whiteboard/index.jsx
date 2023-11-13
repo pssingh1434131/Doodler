@@ -30,19 +30,18 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     ctx.lineCap = "round";
 
     ctxRef.current = ctx;
+
+    drawElements();
+
   }, [color, canvasRef]);
 
-  // Move useLayoutEffect outside of the if statement
-  useLayoutEffect(() => {
-    if (!canvasRef || !canvasRef.current) {
-      return;
-    }
+  const drawElements = () => {
     const roughCanvas = rough.canvas(canvasRef.current);
-  
+
     if (elements.length > 0) {
       ctxRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     }
-  
+
     elements.forEach((element) => {
       if (element.type === "rect") {
         roughCanvas.draw(
@@ -68,7 +67,16 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
         });
       }
     });
-  
+  };
+
+
+  // Move useLayoutEffect outside of the if statement
+  useLayoutEffect(() => {
+    if (!canvasRef || !canvasRef.current) {
+      return;
+    }
+    
+    drawElements();
     const canvasImage = canvasRef.current.toDataURL();
     socket.emit("whiteboardData", canvasImage);
   }, [elements, canvasRef, socket]);
@@ -185,7 +193,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
 
   if (!user?.presenter) {
     return (
-      <div className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3" style={{ height: "500px", width: "100%" }}>
+      <div className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3" style={{ height: "500px", width: "100%", backgroundColor: "white" }}>
         <img
           src={img}
           alt="Real Time whiteboard image shared by presenter"
@@ -201,7 +209,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   return (
     <div
       className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3"
-      style={{ height: "500px", width: "100%" }}
+      style={{ height: "500px", width: "100%", backgroundColor: "white" }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}

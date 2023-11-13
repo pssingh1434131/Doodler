@@ -30,7 +30,7 @@ const Chat = ({ setOpenedChatTab, socket }) => {
   };
 
   return (
-    <div className="position-fixed top-0 h-100 text-white bg-dark" style={{ width: "400px", left: "0%" }}>
+    <div className="position-fixed top-0 h-100 text-white bg-dark" style={{ width: "400px", left: "0%",zIndex: 2}}>
       <button
         type="button"
         onClick={() => setOpenedChatTab(false)}
