@@ -175,30 +175,32 @@ function Navbar() {
             className="modal-content"
             style={{ backgroundColor: "#d9ac9e", height: '70vh', borderRadius: '40px' }}
           >
-            <div className="modal-header justify-content-center">
+            <div className="modal-header justify-content-center" style={{minHeight:'fit-content'}}>
               <h2
                 className="modal-title"
                 id="exampleModalLabel"
-                style={{ color: "white" }}
+                style={{ color: "white", fontSize:'3vh' }}
               >
                 <strong>PROFILE</strong>
               </h2>
               <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={()=>{changeImage("");changeoption(true);changenameoption(false);changepassoption(false);}} style={{ margin: '0px', position: 'absolute', right: '10px' }}>
-                <span aria-hidden="true">&times;</span>
+                <span aria-hidden="true" style={{ fontSize:'2.5vh' }}>&times;</span>
               </button>
             </div>
             <div className="modal-body d-flex" style={{ padding: '0px' }}>
-              <div style={{ flex: '0.35', height: '100%', borderRight: "1px solid white", padding: '2vh 0px' }}>
-                <h3 style={{ textAlign: 'center' }}>{user.name.toUpperCase()}</h3>
-                <h4 style={{ margin: "0px 6%", color: 'black', marginBottom: '1%' }}>username: {user.username}</h4>
-                <h4 style={{ margin: "0px 6%", color: 'black' }}>email: {user.email}</h4>
-                <div className="d-flex align-items-center justify-content-center flex-column">
-                  <button className='playbtn' style={{ backgroundColor: 'orange', margin: '1vh 0px' }} onClick={updatenameoption}>Update Name</button>
-                  <button className='playbtn' style={{ backgroundColor: 'orange', margin: '1vh 0px 2vh 0px' }} onClick={updatepassoption}>Update Password</button>
+              <div className="d-flex justify-content-center flex-column" style={{ flex: '0.35', height: '100%', borderRight: "1px solid white"}}>
+                <div style={{ textAlign: 'center', fontSize: 'calc(1vw + 1vh + 10px)' }}>{user.name.toUpperCase()}</div>
+                <div style={{ margin: "0px 6%",fontSize: 'calc(0.4vw + 0.4vh + 10px)', color: 'black', marginBottom: '1%' }}>username: {user.username}</div>
+                <div style={{ margin: "0px 6%",fontSize: 'calc(0.4vw + 0.4vh + 10px)', color: 'black'}}>email: {user.email}</div>
+                <div className="d-flex align-items-center justify-content-around flex-column">
+                  <div className='d-flex flex-column align-items-center justify-content-around' style={{width:'100%'}}>
+                  <button className='updbtn' style={{ backgroundColor: 'orange'}} onClick={updatenameoption}>Update Name</button>
+                  <button className='updbtn' style={{ backgroundColor: 'orange'}} onClick={updatepassoption}>Update Password</button>
+                  </div>
                   {showprofile && <img
                     src={require(`../avatar/${user.image}`)}
                     alt="Avatar"
-                    style={{ height: "30vh", width: "30vh" }}
+                    style={{ width: 'calc(6vw + 12vh + 10px)'}}
                   />}
                   {namechange && <div className="d-flex align-items-center justify-content-center flex-column" style={{ width: '80%', height: "28vh" }}>
                     <input className='inputbtn' type="text" value={formdata.name} placeholder="Enter Name" onChange={(event) => { changeformdata({ ...formdata, name: event.target.value }) }} />
@@ -213,13 +215,13 @@ function Navbar() {
                 </div>
               </div>
               <div style={{ flex: '0.65', height: '100%', padding:'auto' }}>
-                <h2 style={{ textAlign: 'center', margin: '10px' }}>EDIT AVATAR</h2>
-                <div className="d-flex align-items-center justify-content-center flex-row flex-wrap" style={{ width: '95%', height: '78%', margin:'auto', padding:'5%' }}>
+                <h2 style={{ textAlign: 'center', margin: '1vh' }}>EDIT AVATAR</h2>
+                <div className="d-flex align-items-center justify-content-center flex-row flex-wrap" style={{ width: '40vw', height: '45vh', margin:'auto', padding:'5vh' }}>
                 {array.map((_, index) => (
-                  <img key={index} src={require(`../avatar/Binx_Bond${index}.png`)} alt={`Avatar${index}`} style={{ height: "13vh", width: "13vh", cursor: imageselect !== `Binx_Bond${index}.png` ? "pointer" : 'default', margin:'0.5vh 0.5vw', opacity: imageselect === `Binx_Bond${index}.png` ? 0.7 : 1}} onClick={() => changeImage(`Binx_Bond${index}.png`)}/>
+                  <img key={index} src={require(`../avatar/Binx_Bond${index}.png`)} alt={`Avatar${index}`} style={{ height: 'calc(2.5vw + 5vh + 10px)', cursor: imageselect !== `Binx_Bond${index}.png` ? "pointer" : 'default', margin:'0.5vh 0.5vw', opacity: imageselect === `Binx_Bond${index}.png` ? 0.7 : 1}} onClick={() => changeImage(`Binx_Bond${index}.png`)}/>
                 ))}
                 </div>
-                <button className='btn btn-primary inputbtn' style={{display:'block', width:'40%', margin:'auto' }} onClick={changeimageserver} disabled={imageselect===""?true:false}>SUBMIT</button>
+                <button className='btn btn-primary inputbtn' style={{display:'block', width:'20vw', height:'6vh', margin:'auto' }} onClick={changeimageserver} disabled={imageselect===""?true:false}>SUBMIT</button>
               </div>
             </div>
           </div>
@@ -255,6 +257,7 @@ function Navbar() {
           type="button"
           className="btn btn-primary btn-lg"
           onClick={logout}
+          style={{minWidth:'fit-content', fontSize:'calc(0.5vw + 1vh)'}}
         >
           LOGOUT
         </button>

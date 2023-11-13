@@ -119,7 +119,7 @@ function Friend(props) {
                         </div>
                         <div className='modal-body d-flex flex-column' style={{ backgroundColor: 'black',overflow: 'auto' }}>
                             {friendreq.map((data, index) => (
-                                <div className='d-flex justify-content-between flex-row' key={index} style={{ border: '2px solid white', width: '100%', height: '5vh', textAlign: 'center', fontSize: '156%' }}>
+                                <div className='d-flex justify-content-between flex-row' key={index} style={{ border: '2px solid white', width: '100%', minHeight: 'fit-content', textAlign: 'center', fontSize: '1.5rem' }}>
                                     <div style={{margin:'0px 1vw'}}><h3 style={{ display: 'inline' }}>{data.from}</h3> <h6 style={{ display: 'inline' }}>{timeAgo(new Date(data.date))}</h6></div>
                                     <div ><span style={{margin:'0px 0.5vw', cursor:'pointer'}} onClick={()=>{acceptRequest(index, data._id);}}>&#9989;</span>
                                     <span style={{margin:'0px 0.5vw', cursor:'pointer'}} onClick={()=>{deleteRequest(index, data._id);}}>&#10060;</span></div>
@@ -137,9 +137,9 @@ function Friend(props) {
                         placeholder='Enter username'
                         value={friendid}
                         onChange={onchange}
-                        style={{ padding: '0.375rem 0.75rem', borderRadius: '8px' }}
+                        style={{ padding: '0.375rem 0.75rem', borderRadius: '8px', width:'70%', fontSize:'1vw' }}
                     />
-                    <button type='submit' className='btn btn-primary' onClick={sendRequest}>
+                    <button type='submit' className='btn btn-primary' onClick={sendRequest} style={{width:'30%', fontSize:'1vw', minWidth:'fit-content'}}>
                         Add friend
                     </button>
                 </div>
@@ -162,9 +162,9 @@ function Friend(props) {
                     >
                         {friends.map((data, index) => (
                                 <div className='d-flex justify-content-between align-items-center flex-row' key={index} style={{ border: '1px solid white', width: '100%', height: '5vh', textAlign: 'center', fontSize: '100%' }}>
-                                    <div style={{margin:'0px 1vw'}}><h3 style={{ display: 'inline' }}>{data.person1===props.user.username?data.person2:data.person1}</h3> </div>
+                                    <div style={{margin:'0px 1vw'}}><h3 style={{ display: 'inline', fontSize:'1.5vw' }}>{data.person1===props.user.username?data.person2:data.person1}</h3> </div>
                                     <div >
-                                    <span style={{margin:'0px 1vw', cursor:'pointer'}} onClick={()=>{deletefriend(index, data._id);}}>&#10060;</span></div>
+                                    <span style={{margin:'0px 1vw', cursor:'pointer',fontSize:'calc(1vw+2vh)'}} onClick={()=>{deletefriend(index, data._id);}}>&#10060;</span></div>
                                 </div>
                             ))}
                             {(friends.length === 0) && <div style={{fontSize:'3vh'}}>No Friend</div>}

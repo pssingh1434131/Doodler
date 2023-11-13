@@ -8,20 +8,22 @@ function Loginpage(props) {
       className="App d-flex justify-content-around align-items-center"
       style={{ height: "100vh"}}
     >
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <div 
-          >
-            Doodler
-          </div>
-        </header>
+     <header className="App-header">
+      <div style={{ width: 'calc(6vw + 6vh + 10px)', height: 'auto', display: 'flex', alignItems: 'center' }}>
+        <img src={logo} className="App-logo img-fluid" alt="logo" />
+      </div>
+      <div>
+        Doodler
+      </div>
+    </header>
       <div
-        className="d-flex flex-column align-items-center justify-content-center flex-wrap"
+        className="d-flex flex-column align-items-center justify-content-center"
         style={{
-          width: "30%",
-          height: "60%",
+          width: "25vw",
+          minHeight:'fit-content',
           backgroundColor: "#d9d9d9",
           borderRadius: "40px",
+          padding:'4vh 0'
         }}
       >
         <Login />
