@@ -30,7 +30,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     ctx.lineCap = "round";
 
     ctxRef.current = ctx;
-  }, [color, canvasRef]);
+  }, [color, canvasRef, ctxRef]);
 
   // Move useLayoutEffect outside of the if statement
   useLayoutEffect(() => {
@@ -38,11 +38,11 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
       return;
     }
     const roughCanvas = rough.canvas(canvasRef.current);
-  
+
     if (elements.length > 0) {
       ctxRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     }
-  
+
     elements.forEach((element) => {
       if (element.type === "rect") {
         roughCanvas.draw(
@@ -68,11 +68,11 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
         });
       }
     });
-  
+
     const canvasImage = canvasRef.current.toDataURL();
     socket.emit("whiteboardData", canvasImage);
-  }, [elements, canvasRef, socket]);
-  
+  }, [elements, canvasRef, socket, ctxRef]);
+
 
 
   const handleMouseDown = (e) => {
@@ -118,66 +118,66 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     setIsDrawing(true);
   };
 
-  const handleMouseMove = (e)=>{
+  const handleMouseMove = (e) => {
     //console.log("mouse move", e)
     const { offsetX, offsetY } = e.nativeEvent;
 
-    if(isDrawing){
+    if (isDrawing) {
 
-        if(tool==="pencil"){
-             //pencil by default as static
-            const { path } = elements[elements.length-1];
-            const newPath = [...path, [offsetX, offsetY]];
+      if (tool === "pencil") {
+        //pencil by default as static
+        const { path } = elements[elements.length - 1];
+        const newPath = [...path, [offsetX, offsetY]];
 
-            setElements((prevElements) =>
-                prevElements.map((ele, index)=>{
-                    if(index===elements.length-1){
-                        return {
-                            ...ele,
-                            path: newPath,
-                        };
-                    }
-                    else{
-                        return ele;
-                    }
-                })
-            );
-        }
-        else if(tool=="line"){
-            setElements((prevElements) =>
-                prevElements.map((ele, index)=>{
-                    if(index===elements.length-1){
-                        return {
-                            ...ele,
-                            width: offsetX,
-                            height: offsetY,
-                        };
-                    }
-                    else{
-                        return ele;
-                    }
-                })
-            );
-        }
-        else if(tool=="rect"){
-            setElements((prevElements) =>
-                prevElements.map((ele, index)=>{
-                    if(index===elements.length-1){
-                        return {
-                            ...ele,
-                            width: offsetX - ele.offsetX,
-                            height: offsetY- ele.offsetY,
-                        };
-                    }
-                    else{
-                        return ele;
-                    }
-                })
-            );
-        }
-        
+        setElements((prevElements) =>
+          prevElements.map((ele, index) => {
+            if (index === elements.length - 1) {
+              return {
+                ...ele,
+                path: newPath,
+              };
+            }
+            else {
+              return ele;
+            }
+          })
+        );
+      }
+      else if (tool === "line") {
+        setElements((prevElements) =>
+          prevElements.map((ele, index) => {
+            if (index === elements.length - 1) {
+              return {
+                ...ele,
+                width: offsetX,
+                height: offsetY,
+              };
+            }
+            else {
+              return ele;
+            }
+          })
+        );
+      }
+      else if (tool === "rect") {
+        setElements((prevElements) =>
+          prevElements.map((ele, index) => {
+            if (index === elements.length - 1) {
+              return {
+                ...ele,
+                width: offsetX - ele.offsetX,
+                height: offsetY - ele.offsetY,
+              };
+            }
+            else {
+              return ele;
+            }
+          })
+        );
+      }
+
     }
-};
+  };
 
   const handleMouseUp = () => {
     setIsDrawing(false);
@@ -188,7 +188,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
       <div className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3" style={{ height: "500px", width: "100%" }}>
         <img
           src={img}
-          alt="Real Time whiteboard image shared by presenter"
+          alt=""
           style={{
             height: window.innerHeight * 2,
             width: "285",
