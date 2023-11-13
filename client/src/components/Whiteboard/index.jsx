@@ -11,9 +11,6 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
 
   // Move useEffect outside of the if statement
   useEffect(() => {
-    if (!canvasRef || !canvasRef.current) {
-      return;
-    }
     socket.on("whiteBoardDataResponse", (data) => {
       setImg(data.imgURL);
     });
