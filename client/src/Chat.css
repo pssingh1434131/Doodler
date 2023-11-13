@@ -1,0 +1,136 @@
+/* Chat Page Layout */
+
+.chat {
+  display: flex;
+  width: 100%;
+  padding-bottom: 5vw;
+  height: 70vh;
+}
+
+.chat__sidebar {
+  color: white;
+  background: #333744;
+  width: 25%;
+  overflow-y: scroll;
+}
+
+/* Chat styles */
+
+.chat__main {
+  color: rgb(30, 29, 29);
+  background-color: rgb(126, 128, 128);
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+  width: 75%;
+}
+
+.chat__messages {
+  flex-grow: 1;
+  padding: 24px 24px 0 24px;
+  overflow-y: scroll;
+}
+
+/* Message Styles */
+
+.message {
+  margin-bottom: 16px;
+  text-align: justify;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  padding: 0.2vh;
+  background-color: #353636;
+  border-radius: 10px;
+  border: 2px solid black;
+}
+
+.message__name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-right: 8px;
+  padding-left: 0.2vh;
+  color: #afafaf;
+}
+
+.message__meta {
+  color: #dddcdc;
+  font-size: 14px;
+}
+
+.message a {
+  color: #0070cc;
+}
+
+/* Message Composition Styles */
+
+.compose {
+  display: flex;
+  flex-shrink: 0;
+  margin-top: 16px;
+  padding: 20px;
+}
+
+.compose form {
+  display: flex;
+  flex-grow: 1;
+  margin-right: 16px;
+}
+
+.compose input {
+  border: 1px solid #eeeeee;
+  width: 100%;
+  padding: 8px;
+  margin: 0 16px 0 0;
+  flex-grow: 1;
+}
+
+.compose button {
+  font-size: 14px;
+}
+
+/* Chat Sidebar Styles */
+
+.room-title {
+  font-weight: 400;
+  font-size: 22px;
+  background: #2c2f3a;
+  padding: 24px;
+}
+
+.list-title {
+  font-weight: 500;
+  font-size: 18px;
+  margin-bottom: 4px;
+  padding: 12px 24px 0 24px;
+}
+
+.users {
+  list-style-type: none;
+  font-weight: 300;
+  padding: 12px 24px 0 24px;
+}
+
+.users li {
+  margin: 1vh;
+  padding: 0.5vh;
+  border: 1px solid white;
+  border-radius: 5px;
+}
+
+.users li:hover {
+  cursor: pointer;
+}
+
+#send-button {
+  width: 15%;
+}
+
+#send-location {
+  width: 13%;
+}
+
+#send-button:hover,
+#send-location:hover {
+  cursor: pointer;
+}
