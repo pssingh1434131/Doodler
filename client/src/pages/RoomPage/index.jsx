@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import "./index.css"
 import Whiteboard from "../../components/Whiteboard";
 import Chat from "../../components/Chat";
@@ -54,7 +54,7 @@ const RoomPage = ({ user, socket, users }) => {
     <button 
         type="button" 
         className="btn btn-dark"
-        style={{display: "block", position: "absolute", top: "4%", left: "3%", height: "40px", width: "100px" }}
+        style={{display: "block", position: "absolute", top: "4%", left: "3%", height: "40px", width: "100px" , zIndex: 1 }}
         onClick={()=>setOpenedUserTab(true)} 
     > 
     Users 
@@ -62,7 +62,7 @@ const RoomPage = ({ user, socket, users }) => {
     <button 
         type="button" 
         className="btn btn-primary"
-        style={{display: "block", position: "absolute", top: "4%", left: "11%", height: "40px", width: "100px" }}
+        style={{display: "block", position: "absolute", top: "4%", left: "11%", height: "40px", width: "100px", zIndex:1}}
         onClick={()=>setOpenedChatTab(true)} 
     > 
     Chats
@@ -71,7 +71,7 @@ const RoomPage = ({ user, socket, users }) => {
         openedUserTab && (
             <div 
                 className="position-fixed top-0 h-100 text-white bg-dark" 
-                style={{width:"250px", left: "0%"}}> 
+                style={{width:"250px", left: "0%",zIndex: 2, background: "white"}}> 
                 <button 
                 type="button" 
                 onClick={()=>setOpenedUserTab(false)} 
@@ -110,7 +110,7 @@ const RoomPage = ({ user, socket, users }) => {
                         name="tool"
                         id = "pencil" 
                         value="pencil"
-                        checked={ tool=="pencil" }
+                        checked={ tool==="pencil" }
                         className="mt-1" 
                         onChange={(e)=>setTool(e.target.value)}
                     />
@@ -122,7 +122,7 @@ const RoomPage = ({ user, socket, users }) => {
                         name="tool" 
                         id="line"
                         value="line"
-                        checked={ tool=="line" }
+                        checked={ tool==="line" }
                         className="mt-1"  
                         onChange={(e)=>setTool(e.target.value)}
                     />
@@ -134,7 +134,7 @@ const RoomPage = ({ user, socket, users }) => {
                         name="tool"
                         id="rect" 
                         value="rect" 
-                        checked={ tool=="rect" }
+                        checked={ tool==="rect" }
                         className="mt-1" 
                         onChange={(e)=>setTool(e.target.value)}
                     />

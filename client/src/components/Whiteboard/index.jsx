@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useLayoutEffect } from "react";
+import React, { useEffect, useState, useLayoutEffect,useCallback } from "react";
 import rough from "roughjs";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
@@ -8,35 +8,7 @@ const roughGenerator = rough.generator();
 const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, user, socket }) => {
   const [img, setImg] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
-
-  // Move useEffect outside of the if statement
-  useEffect(() => {
-    socket.on("whiteBoardDataResponse", (data) => {
-      setImg(data.imgURL);
-    });
-  }, [socket, canvasRef]);
-
-  useEffect(() => {
-    if (!canvasRef || !canvasRef.current) {
-      return;
-    }
-    const canvas = canvasRef.current;
-    canvas.height = window.innerHeight * 2;
-    canvas.width = window.innerWidth * 2;
-    const ctx = canvas.getContext("2d");
-
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-
-    ctxRef.current = ctx;
-  }, [color, canvasRef, ctxRef]);
-
-  // Move useLayoutEffect outside of the if statement
-  useLayoutEffect(() => {
-    if (!canvasRef || !canvasRef.current) {
-      return;
-    }
+  const drawElements = useCallback(() => {
     const roughCanvas = rough.canvas(canvasRef.current);
 
     if (elements.length > 0) {
@@ -68,10 +40,44 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
         });
       }
     });
+  }, [canvasRef, ctxRef, elements]);
+  // Move useEffect outside of the if statement
+  useEffect(() => {
+    socket.on("whiteBoardDataResponse", (data) => {
+      setImg(data.imgURL);
+    });
+  }, [socket, canvasRef]);
 
+  useEffect(() => {
+    if (!canvasRef || !canvasRef.current) {
+      return;
+    }
+    const canvas = canvasRef.current;
+    canvas.height = window.innerHeight * 2;
+    canvas.width = window.innerWidth * 2;
+    const ctx = canvas.getContext("2d");
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+
+    ctxRef.current = ctx;
+
+    drawElements();
+
+  }, [color, canvasRef, ctxRef, drawElements]);
+
+
+  // Move useLayoutEffect outside of the if statement
+  useLayoutEffect(() => {
+    if (!canvasRef || !canvasRef.current) {
+      return;
+    }
+    
+    drawElements();
     const canvasImage = canvasRef.current.toDataURL();
     socket.emit("whiteboardData", canvasImage);
-  }, [elements, canvasRef, socket, ctxRef]);
+  }, [elements, canvasRef, socket, ctxRef, drawElements]);
 
 
 
@@ -185,7 +191,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
 
   if (!user?.presenter) {
     return (
-      <div className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3" style={{ height: "500px", width: "100%" }}>
+      <div className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3" style={{ height: "500px", width: "100%", backgroundColor: "white" }}>
         <img
           src={img}
           alt=""
@@ -201,7 +207,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   return (
     <div
       className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3"
-      style={{ height: "500px", width: "100%" }}
+      style={{ height: "500px", width: "100%", backgroundColor: "white" }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
