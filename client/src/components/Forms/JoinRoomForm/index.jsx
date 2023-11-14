@@ -29,7 +29,7 @@ const JoinRoomForm = ({ uuid, socket, setUser }) =>{
     }
 
     return (
-        <form className="form w-100 mt-5">
+        <form className="form w-100 mt-4">
 
             <div className="form-group">
                 <input 
@@ -41,6 +41,7 @@ const JoinRoomForm = ({ uuid, socket, setUser }) =>{
                 />
             </div>
             <div className="form-group ">
+            <div className="input-group d-flex align-items-center justify-content-center">
                     <input
                     type = "text"
                     className="form-control my-2 " 
@@ -48,6 +49,7 @@ const JoinRoomForm = ({ uuid, socket, setUser }) =>{
                     value={roomId}
                     onChange={(e)=> setRoomId(e.target.value)}
                     />
+                    </div>
             </div>
             <button type ="submit" onClick={handleRoomJoin} className="mt-4 btn-primary btn btn-block form-control">Join Room</button>
         </form>

@@ -29,7 +29,7 @@ const CreateRoomForm = ({ uuid, socket, setUser }) => {
     }
 
     return (
-        <form className="form w-100 mt-5">
+        <form className="form w-100 mt-4">
 
             <div className="form-group">
                 <input
@@ -40,23 +40,23 @@ const CreateRoomForm = ({ uuid, socket, setUser }) => {
                     onChange={(e) => setName(e.target.value)}
                 />
             </div>
-            <div className="form-group  border">
+            <div className="form-group">
                 <div className="input-group d-flex align-items-center justify-content-center">
                     <input
                         type="text"
                         value={roomId}
-                        className="form-control my-2 border-0"
+                        className="form-control my-2"
                         disabled
                         placeholder="Generate room code"
                     />
                     <div className="input-group-append ">
                         <button
-                            className="btn btn-primary btn-sm me-1"
+                            className="btn btn-outline-success btn-sm me-1"
                             onClick={() => setRoomId(uuid())}
                             type="button">
-                            generate
+                            Generate
                         </button>
-                        <button className="btn btn-outline-danger btn-sm me-2" type="button" onClick={() => {
+                        <button className="btn btn-outline-danger btn-sm me-1" style={{height:'38px',width:'76px'}} type="button" onClick={() => {
                             navigator.clipboard.writeText(roomId);
                             toast.dark("Room code copied to clipboard!");
                         }}>Copy</button>
