@@ -20,15 +20,7 @@ function ChatBody(props) {
         };
     }, [user.username]);
     
-    useEffect(() => {
-        socket.on('recievemsg', (data) => {
-            if (selectedchat !== null) {
-                const targetUsername = user.username === selectedchat.person1 ? selectedchat.person2 : selectedchat.person1;
-                if (data.from === targetUsername) {
-                    setmsgs([...msgs, data]);
-                }
-            }
-        });
+    useEffect(()=>{
         socket.on('getfriendlist', (data) => {
             if(data.length>0) {
                 setfriends(data);
@@ -39,19 +31,38 @@ function ChatBody(props) {
                 setslnum(0);
             }
         })
+    },[]);
+
+    useEffect(() => {
+        socket.on('recievemsg', (data) => {
+            if (selectedchat !== null) {
+                const targetUsername = user.username === selectedchat.person1 ? selectedchat.person2 : selectedchat.person1;
+                if (data.from === targetUsername) {
+                    setmsgs([...msgs, data]);
+                }
+            }
+        });
         return () => {
             // socket.disconnect();
         };
     }, [msgs, selectedchat, user.username]);
 
-    const selectchat = (index, data) => {
+    useEffect(() => {
+        if (slnum !== -1) {
+          setmsgs([]);
+          socket.emit('getmessages', selectedchat, (response) => {
+            if (response.success && response.data.length > 0) {
+              setmsgs(response.data);
+            }
+          });
+        }
+      }, [slnum, selectedchat]);
+    
+      const selectchat = (index, data) => {
         setslnum(index);
-        setmsgs([]);
-        socket.emit('getmessages', data, (response) => {
-            if (response.success && response.data.length > 0) setmsgs(response.data);
-        })
         changeselectedchat(data);
-    };
+      };
+    
 
     const handletextchange = (event) => {
         settext(event.target.value);
