@@ -30,7 +30,7 @@ const Chat = ({ setOpenedChatTab, socket }) => {
   };
 
   return (
-    <div className="position-fixed top-0 h-100 text-white bg-dark" style={{ width: "400px", left: "0%",zIndex: 2}}>
+    <div className="position-fixed top-0 h-100 text-white bg-dark" style={{ width: "20vw", left: "0%",zIndex: 2}}>
       <button
         type="button"
         onClick={() => setOpenedChatTab(false)}
@@ -40,7 +40,7 @@ const Chat = ({ setOpenedChatTab, socket }) => {
       </button>
       <div
         className="w-100 mt-5 p-2 border border-1 border-white rounded-3 "
-        style={{ height: "70%" }}
+        style={{ height: "65%", overflow:'auto' }}
       >
         {chat.map((msg, index) => (
           <p key={index * 999} className="my-2 text-center w-100 py-2 border border-left-0 border-right-0">
@@ -53,7 +53,7 @@ const Chat = ({ setOpenedChatTab, socket }) => {
         <input
           type="text"
           placeholder="Enter message"
-          className="h-100 border-0 rounded-0 py-2 px-4"
+          className="h-110 border-0 rounded-0 py-2 px-4"
           style={{ width: "90%" }}
           value={message}
           onChange={(e) => setMessage(e.target.value)}

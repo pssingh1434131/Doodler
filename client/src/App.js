@@ -2,7 +2,8 @@ import Forgotpassword from "./components/Forgotpassword";
 import Home from "./components/Home";
 import Loginpage from "./components/Loginpage";
 import Signuppage from "./components/Signuppage";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Chat from "./components/Chat";
+import { BrowserRouter, Routes, Route, Navigate} from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import io from "socket.io-client"
@@ -19,12 +20,12 @@ const connectionOptions = {
   transports: ["websocket"],
 };
 
+const socket = io(server, connectionOptions);
+
 const PrivateRoute = ({ element, path }) => {
   const user = localStorage.getItem("user");
   return user ? element : <Navigate to="/" />;
 };
-
-const socket = io(server, connectionOptions);
 
 function App() {
   const [user,setUser] = useState(null);
@@ -101,7 +102,12 @@ function App() {
           path="/home"
           element={<PrivateRoute element={<Home />} />}
         />
-        <Route exact
+        <Route
+          exact
+          path="/chat"
+          element={<PrivateRoute element={<Chat />} />}
+        />
+         <Route exact
         path="/play" 
         element={<Forms uuid={uuid} socket={socket} setUser={setUser} />} />
         <Route exact

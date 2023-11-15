@@ -191,13 +191,13 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
 
   if (!user?.presenter) {
     return (
-      <div className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3" style={{ height: "500px", width: "100%", backgroundColor: "white" }}>
+      <div className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3" style={{ height: "60vh", width: "100%", backgroundColor: "white", borderRadius:'20px'  }}>
         <img
           src={img}
           alt=""
           style={{
             height: window.innerHeight * 2,
-            width: "285",
+            width: window.innerWidth * 2,
           }}
         />
       </div>
@@ -207,7 +207,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   return (
     <div
       className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3"
-      style={{ height: "500px", width: "100%", backgroundColor: "white" }}
+      style={{ height: "60vh", width: "100%", backgroundColor: "white", borderRadius:'20px' }}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}

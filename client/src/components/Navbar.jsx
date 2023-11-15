@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Logo from "./Logo";
 
-function Navbar() {
+function Navbar(props) {
   const [user, setUser] = useState(null);
   const [showprofile, changeoption] = useState(true);
   const [namechange, changenameoption] = useState(false);
@@ -151,7 +151,7 @@ function Navbar() {
   return (
     <div
       className="d-flex flex-row align-items-start"
-      style={{ height: "28vh", width: "100vw", justifyContent: "space-evenly" }}
+      style={{ height: "20vh", width: "100vw", justifyContent: "space-evenly" }}
     >
       <button
         type="button"
@@ -229,7 +229,7 @@ function Navbar() {
       </div>}
       <div
         className="d-flex flex-column justify-content-center align-items-center"
-        style={{ height: "20vh" }}
+        style={{ height: "20vh", width:'10vw' }}
       >
         {user && user.image && (
           <img
@@ -250,9 +250,11 @@ function Navbar() {
       </div>
       <Logo />
       <div
-        className="d-flex flex-column justify-content-center"
-        style={{ height: "20vh" }}
+        className="d-flex flex-row justify-content-around align-items-center"
+        style={{ marginTop:'8vh', width:'10vw'}}
       >
+       {props.chat&&<Link to="/chat"><img src={require("../chat.png")} alt="chat" style={{width:'50px'}} onMouseOver={(e)=>{e.target.style.opacity = '0.7';}} onMouseLeave={(e)=>{e.target.style.opacity='1'}} /></Link>}
+
         <button
           type="button"
           className="btn btn-primary btn-lg"
@@ -265,5 +267,9 @@ function Navbar() {
     </div>
   );
 }
+
+Navbar.defaultProps = {
+  char: true
+};
 
 export default Navbar;

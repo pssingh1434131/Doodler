@@ -8,6 +8,8 @@ const cookieparser = require('cookie-parser');
 const { Server } = require('socket.io');
 const {getFriends, sendFriendRequest, receiveFriendRequest, deleteFriendRequest, acceptFriendreq, deleteFriendship} = require('./controller/friendControl');
 const { addUser, getUser, removeUser } = require("./utils/users");
+const { getmessages, sendmessages } = require('./controller/chatControl');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -161,5 +163,28 @@ socket.on("whiteboardData", (data) => {
     }
     
   })
+  socket.on("joinchatroom", async (username) => {
+    socket.join(username);
+    datat = await getFriends(username);
+    data = datat.data;
+    if(datat.success) io.to(username).emit('getfriendlist', data);
+    else io.to(username).emit('getfriendlist', []);
+  });
 
+  socket.on('getmessages', async (options, callback) => {
+    const datat = await getmessages(options.person1, options.person2);
+    const data = datat.data;
+    if(datat.success) callback({ data: data, success: true });
+    else callback({ data: [], success: false });
+  })
+
+  socket.on('sendmessage', async (options, callback) => {
+    const datat = await sendmessages(options.msg1.to, options.msg1.from, options.msg1);
+    const data = datat.data;
+    if(datat.success) {
+      io.to(options.msg1.to).emit('recievemsg', data);
+      callback({ data: data, success: true });
+    }
+    else callback({ data: null, success: false });
+  })
 });

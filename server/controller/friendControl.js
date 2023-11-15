@@ -1,6 +1,7 @@
 const  express = require('express');
 const friendRequest = require('../model/friendRequest');
-const friendship = require('../model/friendship')
+const friendship = require('../model/friendship');
+const chatModel = require('../model/chatModel');
 
 module.exports.getFriends = async(username)=>{
     try{
@@ -66,6 +67,11 @@ module.exports.deleteFriendRequest = async(id)=>{
 module.exports.deleteFriendship = async(id)=>{
     try{
         const deletefriend = await friendship.findByIdAndDelete(id);
+        const deletemsgs = await chatModel.deleteMany({
+            $or: [
+              { to: deletefriend.person1 ,from: deletefriend.person2},
+              { to: deletefriend.person2 ,from: deletefriend.person1}
+            ]})
         return {success:true,data:deletefriend};
     }catch(err){
         return {success: false};
