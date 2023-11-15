@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 import "./index.css"
 import Whiteboard from "../../components/Whiteboard";
 import Chat from "../../components/Chat/index";
@@ -9,14 +9,26 @@ const RoomPage = ({ user, socket, users }) => {
 
     const canvasRef = useRef(null);
     const ctxRef = useRef(null);
-
-
     const [tool, setTool] = useState("pencil");
     const [color, setColor] = useState("black");
     const [elements, setElements] = useState([]);
     const [history, setHistory] = useState([]);
     const [openedUserTab, setOpenedUserTab] = useState(false);
     const [openedChatTab, setOpenedChatTab] = useState(false);
+    const [chat, setChat] = useState([]);
+    useEffect(() => {
+        const handleReceivedMessage = (data) => {
+          setChat((prevChats) => [...prevChats, data]);
+        };
+    
+        // Subscribing to the "messageResponse" event
+        socket.on("messageResponse", handleReceivedMessage);
+    
+        // Cleaning up the event listener
+        return () => {
+          socket.off("messageResponse", handleReceivedMessage);
+        };
+      }, [socket]);
 
 
     const handleClearCanvas = () => {
@@ -98,7 +110,7 @@ const RoomPage = ({ user, socket, users }) => {
             }
             {
                 openedChatTab && (
-                    <Chat setOpenedChatTab={setOpenedChatTab} socket={socket} />
+                    <Chat setOpenedChatTab={setOpenedChatTab} socket={socket} chat={chat} setChat={setChat} />
                 )
             }
             <div className="text-center" style={{ fontSize: 'calc(1vh + 1vw + 10px)' }}>White Board <span className="" style={{ color: "blue" }}>[Users Online: {users.length}]</span></div>

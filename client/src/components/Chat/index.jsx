@@ -1,24 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React, {useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 
-const Chat = ({ setOpenedChatTab, socket }) => {
-  const [chat, setChat] = useState([]);
+const Chat = ({ setOpenedChatTab, socket, chat, setChat }) => {
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    const handleReceivedMessage = (data) => {
-      setChat((prevChats) => [...prevChats, data]);
-    };
+  // useEffect(() => {
+  //   const handleReceivedMessage = (data) => {
+  //     setChat((prevChats) => [...prevChats, data]);
+  //   };
 
-    // Subscribing to the "messageResponse" event
-    socket.on("messageResponse", handleReceivedMessage);
+  //   // Subscribing to the "messageResponse" event
+  //   socket.on("messageResponse", handleReceivedMessage);
 
-    // Cleaning up the event listener
-    return () => {
-      socket.off("messageResponse", handleReceivedMessage);
-    };
-  }, [socket]);
+  //   // Cleaning up the event listener
+  //   return () => {
+  //     socket.off("messageResponse", handleReceivedMessage);
+  //   };
+  // }, [socket]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
