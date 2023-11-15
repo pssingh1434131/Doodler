@@ -1,10 +1,14 @@
 import React, {useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
+import filter from 'bad-words';
+import { toast } from 'react-toastify';
+const Filter = new filter({ replaceRegex:  /[A-Za-z0-9가-힣_]/g });
 
 const Chat = ({ setOpenedChatTab, socket, chat, setChat }) => {
   const [message, setMessage] = useState("");
-
+  const [blocked, setblocked] = useState(false);
+  const [badwordcnt, increasecnt] = useState(0);
   // useEffect(() => {
   //   const handleReceivedMessage = (data) => {
   //     setChat((prevChats) => [...prevChats, data]);
@@ -18,12 +22,24 @@ const Chat = ({ setOpenedChatTab, socket, chat, setChat }) => {
   //     socket.off("messageResponse", handleReceivedMessage);
   //   };
   // }, [socket]);
-
   const handleSubmit = (e) => {
     e.preventDefault();
     if (message.trim() !== "") {
-      setChat((prevChats) => [...prevChats, { message, name: "You" }]);
-      socket.emit("message", { message });
+      let isabusive = Filter.isProfane(message);
+      let filteredword = message;
+      if(isabusive)
+      {
+        toast.error(`WARNING: Bad words usage is not allowed. ${2-badwordcnt} more warning left otherwise you will be blocked.`);
+        if(badwordcnt===2)
+        {
+          setblocked(true);
+          toast.error(`Chat blocked!!`);
+        }
+        increasecnt(badwordcnt+1);
+        filteredword = Filter.clean(filteredword);
+      }
+      setChat((prevChats) => [...prevChats, { filteredword, name: "You" }]);
+      socket.emit("message", filteredword);
       setMessage("");
     }
   };
@@ -43,7 +59,7 @@ const Chat = ({ setOpenedChatTab, socket, chat, setChat }) => {
       >
         {chat.map((msg, index) => (
           <p key={index * 999} className="my-2 text-center w-100 py-2 border border-left-0 border-right-0">
-            {msg.name}: {msg.message}
+            {msg.name}: {msg.filteredword}
           </p>
         ))}
       </div>
@@ -57,7 +73,7 @@ const Chat = ({ setOpenedChatTab, socket, chat, setChat }) => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
-        <button type="submit" className="btn btn-primary rounded-0">
+        <button type="submit" className="btn btn-primary rounded-0" disabled={blocked}>
           Send
         </button>
       </form>

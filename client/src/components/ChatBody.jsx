@@ -88,7 +88,7 @@ function ChatBody(props) {
 
     return (
         <div className='d-flex flex-column' style={{ width: '100vw', padding: '0 10vw' }}>
-            <Link to="/home" style={{width:'0px',minWidth:'fir-content'}} ><button className='btn btn-secondary' style={{ width: '8vw', margin: '3vh 0px' }} > &laquo; BACK</button></Link>
+            <Link to="/home" style={{width:'0px',minWidth:'fit-content'}} ><button className='btn btn-secondary' style={{ width: '8vw', margin: '3vh 0px' }} > &laquo; BACK</button></Link>
             <div className="chat" >
                 <div id="sidebar" className="chat__sidebar" style={{ borderTopLeftRadius: '30px', borderBottomLeftRadius: '30px' }}>
                     <div style={{ fontSize: 'calc(1vh + 1vw + 10px)', padding: '1vh 2vw' }}>FRIENDS</div>

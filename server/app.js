@@ -18,8 +18,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieparser());
 app.use(express.json());
 
+const urlaccess = ['http://localhost:3000', 'http://192.168.99.98:3000']
+
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: urlaccess,
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
   optionsSuccessStatus: 204,
@@ -31,7 +33,7 @@ app.options('*', cors(corsOptions));
 
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: urlaccess,
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -145,10 +147,10 @@ socket.on("whiteboardData", (data) => {
 });
 
   socket.on("message", (data)=>{
-    const {message} = data;
+    const filteredword = data;
     const user = getUser(socket.id);
     if(user){
-      socket.broadcast.to(userRoom).emit("messageResponse", {message, name: user.name})
+      socket.broadcast.to(userRoom).emit("messageResponse", {filteredword, name: user.name})
     }
     
   })

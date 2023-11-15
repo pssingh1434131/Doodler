@@ -31,8 +31,8 @@ function App() {
   const [user,setUser] = useState(null);
   const [users, setUsers] = useState([]);
 
-
   useEffect(() => {
+    // Attaching event listeners
     const handleUserJoined = (data) => {
       if (data.success) {
         console.log("userJoined");
@@ -55,7 +55,6 @@ function App() {
       setUsers((prevUsers) => prevUsers.filter((user) => user.name !== data));
     };
   
-    // Attaching event listeners
     socket.on("userIsJoined", handleUserJoined);
     socket.on("allUsers", handleAllUsers);
     socket.on("userJoinedMessageBroadcasted", handleUserJoinedMessage);

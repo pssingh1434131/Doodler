@@ -1,11 +1,12 @@
 import { useRef, useState, useEffect } from "react"
+import {Link} from "react-router-dom"
 import "./index.css"
 import Whiteboard from "../../components/Whiteboard";
 import Chat from "../../components/Chat/index";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min"
 
-const RoomPage = ({ user, socket, users }) => {
+const RoomPage = ({ user, socket, users}) => {
 
     const canvasRef = useRef(null);
     const ctxRef = useRef(null);
@@ -63,11 +64,19 @@ const RoomPage = ({ user, socket, users }) => {
 
     return (
         <div className="row" style={{ height: '100vh' }}>
-            <divc className="d-flex justify-content-start align-items-center" style={{position:'absolute', top: "5%"}}>
+            <div className="d-flex justify-content-start align-items-center" style={{position:'absolute', top: "5%"}}>
+                <Link to="/play" style={{width:'0px',minWidth:'fit-content'}} ><button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{height: "40px", minHeight:'fit-content', width: "5vw", minWidth:'fit-content', zIndex: 1, margin:'0px 1vw',}}
+                    onClick={()=>{}}
+                >
+                    &laquo; BACK
+                </button></Link>
                 <button
                     type="button"
                     className="btn btn-dark"
-                    style={{height: "40px", minHeight:'fit-content', width: "5vw", minWidth:'fit-content', zIndex: 1, margin:'0px 2vw' }}
+                    style={{height: "40px", minHeight:'fit-content', width: "5vw", minWidth:'fit-content', zIndex: 1, margin:'0px 1vw' }}
                     onClick={() => setOpenedUserTab(true)}
                 >
                     Users
@@ -80,7 +89,7 @@ const RoomPage = ({ user, socket, users }) => {
                 >
                     Chats
                 </button>
-            </divc>
+            </div>
 
             {
                 openedUserTab && (
