@@ -6,8 +6,8 @@ import Chat from "../../components/Chat/index";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min"
 
-const RoomPage = ({ user, socket, users}) => {
-
+const RoomPage = ({ socket, users}) => {
+    const user = JSON.parse(localStorage.getItem('roomdata'));
     const canvasRef = useRef(null);
     const ctxRef = useRef(null);
     const [tool, setTool] = useState("pencil");
@@ -64,8 +64,8 @@ const RoomPage = ({ user, socket, users}) => {
 
     return (
         <div className="row" style={{ height: '100vh' }}>
-            <div className="d-flex justify-content-start align-items-center" style={{position:'absolute', top: "5%"}}>
-                <Link to="/play" style={{width:'0px',minWidth:'fit-content'}} ><button
+            <div className="d-flex justify-content-start align-items-center" style={{position:'absolute', top: "10px"}}>
+            <Link to="/play" style={{width:'0px',minWidth:'fit-content'}} ><button
                     type="button"
                     className="btn btn-secondary"
                     style={{height: "40px", minHeight:'fit-content', width: "5vw", minWidth:'fit-content', zIndex: 1, margin:'0px 1vw',}}
@@ -73,6 +73,8 @@ const RoomPage = ({ user, socket, users}) => {
                 >
                     &laquo; BACK
                 </button></Link>
+                </div>
+            <div className="d-flex justify-content-start align-items-center" style={{position:'absolute', top: "60px"}}>
                 <button
                     type="button"
                     className="btn btn-dark"

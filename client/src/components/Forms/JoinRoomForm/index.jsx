@@ -4,11 +4,11 @@ import { toast } from 'react-toastify';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min"
 
-const JoinRoomForm = ({ uuid, socket, setUser }) =>{
+const JoinRoomForm = ({ uuid, socket, user, setuser }) =>{
 
 
     const [roomId, setRoomId] = useState("");
-    const [name, setName] = useState("");
+    const name = user.username;
 
     const navigate = useNavigate();
 
@@ -23,7 +23,8 @@ const JoinRoomForm = ({ uuid, socket, setUser }) =>{
         host: false,
         presenter: false,
         };
-        setUser(roomData);
+        setuser(roomData);
+        localStorage.setItem('roomdata', JSON.stringify(roomData));
         navigate(`/${roomId}`);
         socket.emit("userJoined", roomData);
     }
@@ -37,7 +38,7 @@ const JoinRoomForm = ({ uuid, socket, setUser }) =>{
                 className="form-control my-2"
                 placeholder="Enter your name"
                 value={name}
-                onChange={(e)=>setName(e.target.value)}
+                disabled={true}
                 />
             </div>
             <div className="form-group ">

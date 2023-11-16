@@ -22,20 +22,19 @@ const connectionOptions = {
 
 const socket = io(server, connectionOptions);
 
-const PrivateRoute = ({ element, path }) => {
-  const user = localStorage.getItem("user");
-  return user ? element : <Navigate to="/" />;
-};
-
 function App() {
-  const [user,setUser] = useState(null);
   const [users, setUsers] = useState([]);
-
+  const PrivateRoute = ({ element, path }) => {
+    const user = JSON.parse(localStorage.getItem('user'));
+    return user ? element : <Navigate to="/" />;
+  };
+  function PublicRoute({ element }) {
+    const user = JSON.parse(localStorage.getItem('user'));
+    return user ? <Navigate to="/home" /> : element;
+  }
   useEffect(() => {
-    // Attaching event listeners
     const handleUserJoined = (data) => {
       if (data.success) {
-        console.log("userJoined");
         setUsers(data.users);
       } else {
         console.log("userJoined error");
@@ -94,8 +93,15 @@ function App() {
     <ToastContainer />
     <BrowserRouter>
       <Routes>
-        <Route exact path="/signup" element={<Signuppage />} />
-        <Route exact path="/forgotpassword" element={<Forgotpassword />} />
+      <Route
+            path="/"
+            element={<PublicRoute element={<Loginpage />} />}
+          />
+          <Route path="/signup" element={<PublicRoute element={<Signuppage />} />} />
+          <Route
+            path="/forgotpassword"
+            element={<PublicRoute element={<Forgotpassword />} />}
+          />
         <Route
           exact
           path="/home"
@@ -108,16 +114,12 @@ function App() {
         />
          <Route exact
         path="/play" 
-        element={<Forms uuid={uuid} socket={socket} setUser={setUser} />} />
+        element={<PrivateRoute element={<Forms uuid={uuid} socket={socket}/>} />} />
         <Route exact
         path="/:roomId" 
-        element={<RoomPage user ={user} socket={socket} users={users}/>} 
+        element={<PrivateRoute element={<RoomPage socket={socket} users={users}/>} />} 
         />
-        <Route
-          exact
-          path="/"
-          element={<Loginpage />}
-        />
+        
       </Routes>
     </BrowserRouter>
     </>
