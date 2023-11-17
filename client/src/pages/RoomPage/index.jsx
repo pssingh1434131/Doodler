@@ -5,6 +5,7 @@ import Whiteboard from "../../components/Whiteboard";
 import Chat from "../../components/Chat/index";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min"
+import updateStatus from "../../services/setStatus";
 
 const RoomPage = ({ socket, users}) => {
     const user = JSON.parse(localStorage.getItem('roomdata'));
@@ -17,6 +18,21 @@ const RoomPage = ({ socket, users}) => {
     const [openedUserTab, setOpenedUserTab] = useState(false);
     const [openedChatTab, setOpenedChatTab] = useState(false);
     const [chat, setChat] = useState([]);
+    useEffect(() => {
+        updateStatus('busy');
+    
+        // Set the status to 'offline' when the user leaves the page
+        const handleBeforeUnload = () => {
+          updateStatus('offline');
+        };
+    
+        window.addEventListener('beforeunload', handleBeforeUnload);
+    
+        return () => {
+          updateStatus('offline');
+          window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+      }, []);
     useEffect(() => {
         const handleReceivedMessage = (data) => {
           setChat((prevChats) => [...prevChats, data]);

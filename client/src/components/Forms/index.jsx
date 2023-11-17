@@ -3,9 +3,25 @@ import JoinRoomForm from "./JoinRoomForm"
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min"
 import "./index.css"
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import updateStatus from "../../services/setStatus";
 
 const Forms = ({ uuid , socket}) =>{
+    useEffect(() => {
+        updateStatus('online');
+    
+        // Set the status to 'offline' when the user leaves the page
+        const handleBeforeUnload = () => {
+          updateStatus('offline');
+        };
+    
+        window.addEventListener('beforeunload', handleBeforeUnload);
+    
+        return () => {
+          updateStatus('offline');
+          window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+      }, []);
     const [user, setuser] = useState(JSON.parse(localStorage.getItem('user')));
     return (
     <div className="d-flex align-items-center" style={{height:'100vh', justifyContent:'space-evenly'}} >

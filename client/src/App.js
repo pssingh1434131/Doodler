@@ -11,6 +11,7 @@ import Forms from './components/Forms/index'
 import RoomPage from './pages/RoomPage';
 
 import "./App.css";
+import Lobby from "./components/Lobby";
 
 const server = "http://localhost:3001";
 const connectionOptions = {
@@ -115,6 +116,9 @@ function App() {
          <Route exact
         path="/play" 
         element={<PrivateRoute element={<Forms uuid={uuid} socket={socket}/>} />} />
+         <Route exact
+        path="/lobby" 
+        element={<PrivateRoute element={<Lobby uuid={uuid} socket={socket}/>} />} />
         <Route exact
         path="/:roomId" 
         element={<PrivateRoute element={<RoomPage socket={socket} users={users}/>} />} 

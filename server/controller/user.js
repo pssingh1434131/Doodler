@@ -1,5 +1,6 @@
 const  express = require('express');
 const userModel = require('../model/userModel');
+const onlineUsers = require('../model/onlineUsers');
 const jwt = require('jsonwebtoken');
 const jwt_key = process.env.JWT_KEY;
 const bcrypt = require('bcryptjs');
@@ -15,6 +16,7 @@ module.exports.signup = async(req, res)=>{
         const salt = await bcrypt.genSalt(10);
         const secPass = await bcrypt.hash(password, salt);
         const user = await userModel.create({name: name, username: username, email: email, password: secPass});
+        const userstatus = await onlineUsers.create({username:username, status:'offline'});
         return res.json({success: true});
     }
     catch(err){
@@ -36,6 +38,13 @@ module.exports.login = async(req, res)=>{
         const uid = user['_id'];
         const authtoken = jwt.sign({payload: uid}, jwt_key);
         res.cookie('isloggedin',authtoken,{httpOnly:true});
+        var userstatus = await onlineUsers.findOne({username:user.username})
+        if(!userstatus)
+        {
+            userstatus = await onlineUsers.create({username:user.username, status:'offline'});
+        }
+        userstatus.status = 'online';
+        userstatus = await userstatus.save();
         return res.json({ success: true, user: {name:user.name, username: user.username, email:user.email, image: user.image},token:authtoken});
     }
     catch(err){
@@ -101,8 +110,21 @@ module.exports.getuser = async(req, res)=>{
     }
 }
 
-module.exports.logout = function logout(req,res)
+module.exports.getuserbyusername = async(req, res)=>{
+    try{
+        const username = req.params.username;
+        const user = await userModel.findOne({username:username});
+        return res.json({ success: true,user:user});
+    }
+    catch(err){
+        return res.status(400).json({success: false});
+    }
+}
+
+module.exports.logout = async function logout(req,res)
 {
+    const user = req.user;
+    const newstatus = await onlineUsers.updateOne({username: user.username}, {status: 'offline'});
     res.cookie('isloggedin','',{maxAge:0});
     return res.json({ success: true});
 }
@@ -133,7 +155,8 @@ module.exports.protectRoute = async function protectRoute(req,res,next)
         else{
             return res.status(400).json({
                 message:"please login again",
-                success: false
+                success: false,
+                loggedout:true
             })
         }
     }
@@ -143,5 +166,37 @@ module.exports.protectRoute = async function protectRoute(req,res,next)
             message:err.message,
             success: false
         })
+    }
+}
+
+module.exports.getOnlineUsers = async(req, res)=>{
+    try{
+        const onlineuser = await onlineUsers.find({status:'online'});
+        return res.json({success:true, onlineuser});
+    }
+    catch(err){
+        return res.status(400).json({success: false});
+    }
+}
+
+module.exports.getLobbyUsers = async(req, res)=>{
+    try{
+        const lobbyuser = await onlineUsers.find({status:'lobby'});
+        return res.json({success:true, lobbyuser});
+    }
+    catch(err){
+        return res.status(400).json({success: false});
+    }
+}
+
+module.exports.changeUserStatus = async(req,res)=>{
+    try{
+        const status = req.body.status;
+        const user = req.user;
+        const newstatus = await onlineUsers.updateOne({username: user.username}, {status: status});
+        return res.json({success:true});
+    }
+    catch(err){
+        return res.status(400).json({success: false});
     }
 }
