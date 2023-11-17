@@ -5,11 +5,15 @@ import Whiteboard from "../../components/Whiteboard";
 import Chat from "../../components/Chat/index";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min"
+import { BsDownload } from 'react-icons/bs';
 
 const RoomPage = ({ socket, users}) => {
     const user = JSON.parse(localStorage.getItem('roomdata'));
+
     const canvasRef = useRef(null);
     const ctxRef = useRef(null);
+
+
     const [tool, setTool] = useState("pencil");
     const [color, setColor] = useState("black");
     const [elements, setElements] = useState([]);
@@ -17,6 +21,10 @@ const RoomPage = ({ socket, users}) => {
     const [openedUserTab, setOpenedUserTab] = useState(false);
     const [openedChatTab, setOpenedChatTab] = useState(false);
     const [chat, setChat] = useState([]);
+    const [selectedShape, setSelectedShape] = useState("");
+    const [thickness, setThickness] = useState(5);
+
+
     useEffect(() => {
         const handleReceivedMessage = (data) => {
           setChat((prevChats) => [...prevChats, data]);
@@ -31,7 +39,42 @@ const RoomPage = ({ socket, users}) => {
         };
       }, [socket]);
 
+      
+    const handleDownload = () => {
+        const canvas = canvasRef.current;
+    
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        const scaleFactor = 5; 
+        tempCanvas.width = canvas.width * scaleFactor;
+        tempCanvas.height = canvas.height * scaleFactor;
+        tempCtx.fillStyle = 'white'; // Set white background
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    
+        // Draw the content from the original canvas onto the temporary canvas
+        tempCtx.drawImage(canvas, 0, 0, canvas.width * scaleFactor, canvas.height * scaleFactor);
+    
+        
+        tempCanvas.toBlob((blob) => {
+            
+            const link = document.createElement('a');
+            link.download = 'whiteboard_drawing.png'; //Can Change the file name and extension as needed
+    
+            link.href = window.URL.createObjectURL(blob);
+            link.click();
+    
+            window.URL.revokeObjectURL(link.href); // Clean up the Blob URL after download
 
+        }, 'image/png'); 
+    };
+    
+    
+    
+   
+    const handleDisconnect = () => {
+        // Emit an event to signal the user's disconnection
+        socket.emit("Userdisconnect",user); // 'user' contains user information
+    };
     const handleClearCanvas = () => {
         const canvas = canvasRef.current;
         const ctx = canvas.getContext("2d")
@@ -61,6 +104,24 @@ const RoomPage = ({ socket, users}) => {
         setHistory((prevHistory) => prevHistory.slice(0, prevHistory.length - 1));
     };
 
+    const handleThicknessChange = (newThickness) => {
+        setThickness(newThickness);
+      
+        setElements((prevElements) =>
+          prevElements.map((element, index) => {
+            if (index === prevElements.length ) {
+              // Apply new thickness only to the current drawing element
+              return {
+                ...element,
+                strokeWidth: newThickness,
+              };
+            }
+            return element;
+          })
+        );
+      };
+      
+
 
     return (
         <div className="row" style={{ height: '100vh' }}>
@@ -69,11 +130,24 @@ const RoomPage = ({ socket, users}) => {
                     type="button"
                     className="btn btn-secondary"
                     style={{height: "40px", minHeight:'fit-content', width: "5vw", minWidth:'fit-content', zIndex: 1, margin:'0px 1vw',}}
-                    onClick={()=>{}}
+                    onClick={() => handleDisconnect()}
                 >
                     &laquo; BACK
                 </button></Link>
                 </div>
+
+                <div className="d-flex justify-content-end align-items-center" style={{ position: 'absolute', top: "20px", marginRight: "50px" }}>
+                <button
+                    type="button"
+                    className="btn btn-secondary d-flex align-items-center"
+                    style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content', zIndex: 1, margin: '0px 1vw', fontSize: '18px' }}
+                    onClick={handleDownload}
+                >
+                    <BsDownload style={{ marginRight: '5px' }} />
+                    <strong>Download</strong>
+                </button>
+            </div>
+
             <div className="d-flex justify-content-start align-items-center" style={{position:'absolute', top: "60px"}}>
                 <button
                     type="button"
@@ -124,12 +198,12 @@ const RoomPage = ({ socket, users}) => {
                     <Chat setOpenedChatTab={setOpenedChatTab} socket={socket} chat={chat} setChat={setChat} />
                 )
             }
-            <div className="text-center" style={{ fontSize: 'calc(1vh + 1vw + 10px)' }}>White Board <span className="" style={{ color: "blue" }}>[Users Online: {users.length}]</span></div>
+            <div className="text-center" style={{ fontWeight: "bold", fontSize:"40px" }}>White Board <span className="" style={{ color: "blue" }}>[Users Online: {users.length}]</span></div>
             {
-                <div className="col-md-10 mx-auto px-5 mb-3 d-flex align-items-center justify-content-center">
+                <div className="col-md-10 mx-auto px-1 mb-3 d-flex align-items-center justify-content-center">
                     <div className="d-flex col-md-3 gap-3 justify-content-center gap-1">
                         <div className="d-flex gap-1">
-                            <label htmlFor="pencil">Pencil</label>
+                            <label htmlFor="pencil" style={{fontWeight: "bold", fontSize:"16px" }}>Pencil</label>
                             <input
                                 type="radio"
                                 name="tool"
@@ -142,7 +216,7 @@ const RoomPage = ({ socket, users}) => {
                             />
                         </div>
                         <div className="d-flex gap-1">
-                            <label htmlFor="line">Line</label>
+                            <label htmlFor="line" style={{fontWeight: "bold", fontSize:"16px" }} >Line</label>
                             <input
                                 type="radio"
                                 name="tool"
@@ -154,23 +228,66 @@ const RoomPage = ({ socket, users}) => {
                                 disabled={!user?.presenter}
                             />
                         </div>
-                        <div className="d-flex gap-1">
-                            <label htmlFor="rect">Rectangle</label>
+                        <div >
+                        <div className="shapes-container">
+                            <label htmlFor="shape" style={{ marginRight: '5px',fontWeight: "bold", fontSize:"16px" }}>Shapes:</label>
+                            <select
+                                id="shape"
+                                value={selectedShape}
+                                onChange={(e) => {
+                                setSelectedShape(e.target.value); // Update the selected shape when the dropdown value changes
+                                setTool(e.target.value); // Set the tool based on the selected shape
+                                }}
+                                
+                            >
+                                <option value="">Choose</option>
+                                <option value="rect">Rectangle</option>
+                                <option value="circle">Circle</option>
+                                <option value="square">Square</option>
+                                <option value="trapezium">Trapezium</option>
+                                <option value="ellipse">Ellipse</option>
+                                <option value="quadraticCurvy">Curve</option>
+                               
+                            </select>
+                            </div>
+                            </div>
+                    </div>
+                    <div className="d-flex gap-1">
+                            <label htmlFor="eraser" style={{marginLeft: "20px",fontWeight: "bold", fontSize:"16px"  }}>Eraser</label>
                             <input
                                 type="radio"
                                 name="tool"
-                                id="rect"
-                                value="rect"
-                                checked={tool === "rect"}
+                                id="eraser"
+                                value="eraser"
+                                checked={tool === "eraser"}
                                 className="mt-1"
                                 onChange={(e) => setTool(e.target.value)}
                                 disabled={!user?.presenter}
                             />
                         </div>
-                    </div>
+
+                        <div className="whiteboard-container">
+                            {/* Thickness adjuster */}
+                            <div className="thickness-slider">
+                                <label htmlFor="thickness" style={{fontWeight: "bold", fontSize:"16px" }}>Thickness:</label>
+                                <input
+                                type="range"
+                                id="thickness"
+                                min="1"
+                                max="20"
+                                value={thickness}
+                                onChange={(e) => handleThicknessChange(parseInt(e.target.value))}
+                                style={{
+                                    background: `linear-gradient(to right, ${color}, ${color} ${((thickness - 1) / 19) * 100}%, #d3d3d3 ${(thickness / 20) * 100}%, #d3d3d3)`,
+                                }}
+                                />
+                                <span>{thickness}</span>
+                            </div>
+                            </div>
+
                     <div className="col-md-2 mx-auto">
                         <div className="d-flex align-items-center ">
-                            <label htmlFor="color">Select Color: </label>
+                            <label htmlFor="color" style={{fontWeight: "bold", fontSize:"16px" }}>Select Color: </label>
                             <input
                                 type="color"
                                 id="color"
@@ -185,14 +302,16 @@ const RoomPage = ({ socket, users}) => {
                         <button className="btn btn-primary mt-1"
                             disabled={elements.length === 0 || !user?.presenter}
                             onClick={() => undo()}
+                            style={{marginLeft:"60px",fontWeight: "bold"}}
                         >Undo</button>
                         <button className="btn btn-outline-primary mt-1"
                             disabled={history.length < 1 || !user?.presenter}
                             onClick={() => redo()}
+                            style={{fontWeight: "bold"}}
                         >Redo</button>
                     </div>
                     <div className="col-md-2">
-                        <button className="btn btn-danger" onClick={handleClearCanvas} disabled={!user?.presenter}>Clear Canvas</button>
+                        <button className="btn btn-danger" onClick={handleClearCanvas} disabled={!user?.presenter} style={{fontWeight: "bold"}}>Clear Canvas</button>
                     </div>
                 </div>
             }
@@ -207,6 +326,8 @@ const RoomPage = ({ socket, users}) => {
                     tool={tool}
                     user={user}
                     socket={socket}
+                    thickness={thickness}
+                    setThickness={setThickness}
                 />
             </div>
         </div>

@@ -1,26 +1,99 @@
-import React, { useEffect, useState, useLayoutEffect,useCallback } from "react";
+import React, { useEffect, useState, useLayoutEffect,useCallback} from "react";
 import rough from "roughjs";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 
 const roughGenerator = rough.generator();
 
-const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, user, socket }) => {
+const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, user, socket, thickness, setThickness }) => {
   const [img, setImg] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isErasing, setIsErasing] = useState(false);
+  
+
   const drawElements = useCallback(() => {
     const roughCanvas = rough.canvas(canvasRef.current);
+    const ctx = canvasRef.current.getContext("2d");
+
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
     if (elements.length > 0) {
       ctxRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     }
 
     elements.forEach((element) => {
-      if (element.type === "rect") {
+
+      
+
+      ctx.lineWidth = element.strokeWidth || thickness;
+      
+      if (element.type === "ellipse") {
+        roughCanvas.draw(
+          roughGenerator.ellipse(
+            (element.startX + element.endX) / 2,
+            (element.startY + element.endY) / 2,
+            Math.abs(element.endX - element.startX),
+            Math.abs(element.endY - element.startY),
+            {
+              stroke: element.stroke,
+              strokeWidth: element.strokeWidth ,
+              roughness: 0,
+            }
+          )
+        );
+      }
+      else if (element.type === "trapezium") {
+        const x1 = element.startX;
+        const y1 = element.startY;
+        const x2 = element.endX;
+        const y2 = element.endY;
+        const baseWidth = element.baseWidth;
+        const topWidth = element.topWidth;
+      
+        const trapeziumPath = [
+          [x1, y1],
+          [x2, y1],
+          [x2 - (baseWidth - topWidth) / 2, y2],
+          [x1 + (baseWidth - topWidth) / 2, y2],
+        ];
+      
+        roughCanvas.draw(
+          roughGenerator.polygon(trapeziumPath, {
+            stroke: element.stroke,
+            roughness: 0,
+            strokeWidth: element.strokeWidth ,
+          })
+        );
+      }
+      else if (element.type === "square") {
+        roughCanvas.draw(
+          roughGenerator.rectangle(
+            element.offsetX,
+            element.offsetY,
+            element.sideLength,
+            element.sideLength,
+            {
+              stroke: element.stroke,
+              strokeWidth: element.strokeWidth,
+              roughness: 0,
+            }
+          )
+        );
+      }
+      else if (element.type === "circle") {
+        roughCanvas.draw(
+          roughGenerator.circle(element.offsetX, element.offsetY, element.radius * 2, {
+            stroke: element.stroke,
+            strokeWidth: element.strokeWidth ,
+            roughness: 0,
+          })
+        );
+      }
+      else if (element.type === "rect") {
         roughCanvas.draw(
           roughGenerator.rectangle(element.offsetX, element.offsetY, element.width, element.height, {
             stroke: element.stroke,
-            strokeWidth: 5,
+            strokeWidth: element.strokeWidth,
             roughness: 0,
           })
         );
@@ -28,20 +101,33 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
         roughCanvas.draw(
           roughGenerator.line(element.offsetX, element.offsetY, element.width, element.height, {
             stroke: element.stroke,
-            strokeWidth: 5,
+            strokeWidth: element.strokeWidth ,
             roughness: 0,
           })
         );
       } else if (element.type === "pencil") {
         roughCanvas.linearPath(element.path, {
           stroke: element.stroke,
-          strokeWidth: 5,
+          strokeWidth: element.strokeWidth ,
           roughness: 0,
         });
       }
+      else if (element.type === "quadraticCurvy" && element.points.length >= 2) {
+        const curvePoints = element.points.map(({ x, y }) => [x, y]);
+        const path = roughGenerator.curve(curvePoints, {
+          stroke: element.stroke,
+          strokeWidth: element.strokeWidth ,
+          roughness: 0,
+          curve: "quadraticBezier", // Use quadratic Bezier curve
+        });
+        roughCanvas.draw(path);
+      }
     });
-  }, [canvasRef, ctxRef, elements]);
-  // Move useEffect outside of the if statement
+
+    ctx.lineWidth = thickness;
+
+  }, [canvasRef, ctxRef, elements, thickness]);
+ 
   useEffect(() => {
     socket.on("whiteBoardDataResponse", (data) => {
       setImg(data.imgURL);
@@ -58,17 +144,17 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     const ctx = canvas.getContext("2d");
 
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
     ctx.lineCap = "round";
+    ctx.lineWidth = thickness;
 
     ctxRef.current = ctx;
 
     drawElements();
 
-  }, [color, canvasRef, ctxRef, drawElements]);
+  }, [color, canvasRef, ctxRef, drawElements, thickness]);
 
 
-  // Move useLayoutEffect outside of the if statement
+  
   useLayoutEffect(() => {
     if (!canvasRef || !canvasRef.current) {
       return;
@@ -80,7 +166,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   }, [elements, canvasRef, socket, ctxRef, drawElements]);
 
 
-
+  
   const handleMouseDown = (e) => {
     const { offsetX, offsetY } = e.nativeEvent;
 
@@ -93,6 +179,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
           offsetY,
           path: [[offsetX, offsetY]],
           stroke: color,
+          strokeWidth: thickness,
         },
       ]);
     } else if (tool === "line") {
@@ -105,6 +192,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
           width: offsetX,
           height: offsetY,
           stroke: color,
+          strokeWidth: thickness,
         },
       ]);
     } else if (tool === "rect") {
@@ -117,9 +205,78 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
           width: 0,
           height: 0,
           stroke: color,
+          strokeWidth: thickness,
         },
       ]);
+    } else if (tool === "circle") {
+      setElements((prevElements) => [
+        ...prevElements,
+        {
+          type: "circle",
+          offsetX,
+          offsetY,
+          radius: 0,
+          stroke: color,
+          strokeWidth: thickness,
+        },
+      ]);
+    } else if (tool === "square") {
+      setElements((prevElements) => [
+        ...prevElements,
+        {
+          type: "square",
+          offsetX,
+          offsetY,
+          sideLength: 0,
+          stroke: color,
+          strokeWidth: thickness,
+        },
+      ]);
+    } else if (tool === "trapezium") {
+      setElements((prevElements) => [
+        ...prevElements,
+        {
+          type: "trapezium",
+          startX: offsetX,
+          startY: offsetY,
+          endX: offsetX,
+          endY: offsetY,
+          baseWidth: 0,
+          topWidth: 0,
+          stroke: color,
+          strokeWidth: thickness,
+        },
+      ]);
+    }else if (tool === "ellipse") {
+      setElements((prevElements) => [
+        ...prevElements,
+        {
+          type: "ellipse",
+          startX: offsetX,
+          startY: offsetY,
+          endX: offsetX,
+          endY: offsetY,
+          stroke: color,
+          strokeWidth: thickness,
+        },
+      ]);
+    } 
+    else if (tool === "quadraticCurvy") {
+      setElements((prevElements) => [
+        ...prevElements,
+        {
+          type: "quadraticCurvy",
+          points: [{ x: offsetX, y: offsetY }, { x: offsetX, y: offsetY }], // Start and end point are initially the same
+          stroke: color,
+          strokeWidth: thickness,
+        },
+      ]);
+      setIsDrawing(true);
     }
+    else if (tool === "eraser") {
+      setIsErasing(true);
+    }
+    
 
     setIsDrawing(true);
   };
@@ -180,13 +337,110 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
             }
           })
         );
+      } else if (tool === "circle") {
+        setElements((prevElements) =>
+          prevElements.map((ele, index) => {
+            if (index === elements.length - 1) {
+              const radius = Math.sqrt((offsetX - ele.offsetX)**2 + (offsetY - ele.offsetY)**2);
+              return {
+                ...ele,
+                radius,
+              };
+            } else {
+              return ele;
+            }
+          })
+        );
+      }else if (tool === "square") {
+        setElements((prevElements) =>
+          prevElements.map((ele, index) => {
+            if (index === elements.length - 1) {
+              const sideLength = Math.abs(offsetX - ele.offsetX); // Assuming square drawn based on the difference in X coordinates
+              return {
+                ...ele,
+                sideLength,
+              };
+            } else {
+              return ele;
+            }
+          })
+        );
+      } else if (tool === "trapezium") {
+        setElements((prevElements) =>
+          prevElements.map((ele, index) => {
+            if (index === elements.length - 1) {
+              return {
+                ...ele,
+                endX: offsetX,
+                endY: offsetY,
+                baseWidth: Math.abs(offsetX - ele.startX),
+                topWidth: Math.abs(ele.endX - ele.startX) * 0.6, // You can adjust the ratio for the top width as needed
+              };
+            } else {
+              return ele;
+            }
+          })
+        );
+      }else if (tool === "ellipse") {
+        setElements((prevElements) =>
+          prevElements.map((ele, index) => {
+            if (index === elements.length - 1) {
+              return {
+                ...ele,
+                endX: offsetX,
+                endY: offsetY,
+              };
+            } else {
+              return ele;
+            }
+          })
+        );
       }
-
+      else if (tool === "quadraticCurvy") {
+        setElements((prevElements) =>
+          prevElements.map((ele, index) => {
+            if (index === elements.length - 1) {
+              const updatedPoints = ele.points;
+              const length = updatedPoints.length;
+  
+              // Update the endpoint for the line
+              updatedPoints[length - 1] = { x: offsetX, y: offsetY };
+  
+              // Calculate control points for the curve
+              const controlX = (updatedPoints[0].x + offsetX) / 2;
+              const controlY = (updatedPoints[0].y + offsetY) / 2;
+  
+              updatedPoints.splice(1, 1, { x: controlX, y: controlY });
+  
+              return {
+                ...ele,
+                points: updatedPoints,
+              };
+            } else {
+              return ele;
+            }
+          })
+        );
+      }
+    }
+    if (isErasing) {
+      const ctx = canvasRef.current.getContext("2d");
+  
+      
+      const eraserSize = 20; // Define the size of the eraser
+      ctx.clearRect(
+        offsetX - eraserSize / 2,
+        offsetY - eraserSize / 2,
+        eraserSize,
+        eraserSize
+      );
     }
   };
 
   const handleMouseUp = () => {
     setIsDrawing(false);
+    setIsErasing(false);
+
   };
 
   if (!user?.presenter) {
