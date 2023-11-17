@@ -148,14 +148,14 @@ const RoomPage = ({ socket, users}) => {
                 </button>
             </div>
 
-            <div className="d-flex justify-content-start align-items-center" style={{position:'absolute', top: "60px"}}>
+            <div className="d-flex justify-content-start align-items-center" style={{position:'absolute', top: "10px", marginLeft:"200px"}}>
                 <button
                     type="button"
                     className="btn btn-dark"
                     style={{height: "40px", minHeight:'fit-content', width: "5vw", minWidth:'fit-content', zIndex: 1, margin:'0px 1vw' }}
                     onClick={() => setOpenedUserTab(true)}
                 >
-                    Users
+                    Active users:  {users.length}
                 </button>
                 <button
                     type="button"
@@ -198,7 +198,7 @@ const RoomPage = ({ socket, users}) => {
                     <Chat setOpenedChatTab={setOpenedChatTab} socket={socket} chat={chat} setChat={setChat} />
                 )
             }
-            <div className="text-center" style={{ fontWeight: "bold", fontSize:"40px" }}>White Board <span className="" style={{ color: "blue" }}>[Users Online: {users.length}]</span></div>
+            <div className="text-center" style={{ fontWeight: "bold"}}></div>
             {
                 <div className="col-md-10 mx-auto px-1 mb-3 d-flex align-items-center justify-content-center">
                     <div className="d-flex col-md-3 gap-3 justify-content-center gap-1">
@@ -316,7 +316,7 @@ const RoomPage = ({ socket, users}) => {
                 </div>
             }
 
-            <div className="col-md-10 mx-auto mt-4 canvas-box ">
+            <div className="col-md-12 mx-auto mt-5 canvas-box "  >
                 <Whiteboard
                     canvasRef={canvasRef}
                     ctxRef={ctxRef}
