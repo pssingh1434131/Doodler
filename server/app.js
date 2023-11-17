@@ -162,9 +162,18 @@ socket.on("whiteboardData", (data) => {
     if(user){
       removeUser(socket.id);
       socket.broadcast.to(userRoom).emit("userLeftMessageBroadcasted", user.name)
-    }
-    
+    } 
   })
+
+  socket.on("Userdisconnect", (user)=>{
+    const userCurrent = getUser(socket.id);
+    //console.log("disconnected",user);
+    if(userCurrent){
+      removeUser(socket.id);
+      socket.broadcast.to(userRoom).emit("userLeftMessageBroadcasted", userCurrent.name)
+    } 
+  })
+
   socket.on("joinchatroom", async (username) => {
     socket.join(username);
     datat = await getFriends(username);
