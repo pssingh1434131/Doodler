@@ -3,7 +3,7 @@ import Home from "./components/Home";
 import Loginpage from "./components/Loginpage";
 import Signuppage from "./components/Signuppage";
 import Chat from "./components/Chat";
-import { BrowserRouter, Routes, Route, Navigate} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import io from "socket.io-client"
@@ -41,25 +41,25 @@ function App() {
         console.log("userJoined error");
       }
     };
-  
+
     const handleAllUsers = (data) => {
       setUsers(data);
     };
-  
+
     const handleUserJoinedMessage = (data) => {
       toast.info(`${data} joined the room`);
     };
-  
+
     const handleUserLeftMessage = (data) => {
       toast.info(`${data} left the room`);
       setUsers((prevUsers) => prevUsers.filter((user) => user.name !== data));
     };
-  
+
     socket.on("userIsJoined", handleUserJoined);
     socket.on("allUsers", handleAllUsers);
     socket.on("userJoinedMessageBroadcasted", handleUserJoinedMessage);
     socket.on("userLeftMessageBroadcasted", handleUserLeftMessage);
-  
+
     // Cleanup function
     return () => {
       // Removing event listeners
@@ -71,7 +71,7 @@ function App() {
   }, []);
 
   const uuid = () => {
-    let S4 = () => { 
+    let S4 = () => {
       return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
     };
     return (
@@ -91,10 +91,10 @@ function App() {
   };
   return (
     <>
-    <ToastContainer />
-    <BrowserRouter>
-      <Routes>
-      <Route
+      <ToastContainer />
+      <BrowserRouter>
+        <Routes>
+          <Route
             path="/"
             element={<PublicRoute element={<Loginpage />} />}
           />
@@ -103,29 +103,29 @@ function App() {
             path="/forgotpassword"
             element={<PublicRoute element={<Forgotpassword />} />}
           />
-        <Route
-          exact
-          path="/home"
-          element={<PrivateRoute element={<Home />} />}
-        />
-        <Route
-          exact
-          path="/chat"
-          element={<PrivateRoute element={<Chat />} />}
-        />
-         <Route exact
-        path="/play" 
-        element={<PrivateRoute element={<Forms uuid={uuid} socket={socket}/>} />} />
-         <Route exact
-        path="/lobby" 
-        element={<PrivateRoute element={<Lobby uuid={uuid} socket={socket}/>} />} />
-        <Route exact
-        path="/:roomId" 
-        element={<PrivateRoute element={<RoomPage socket={socket} users={users}/>} />} 
-        />
-        
-      </Routes>
-    </BrowserRouter>
+          <Route
+            exact
+            path="/home"
+            element={<PrivateRoute element={<Home />} />}
+          />
+          <Route
+            exact
+            path="/chat"
+            element={<PrivateRoute element={<Chat />} />}
+          />
+          <Route exact
+            path="/play"
+            element={<PrivateRoute element={<Forms uuid={uuid} socket={socket} />} />} />
+          <Route exact
+            path="/lobby"
+            element={<PrivateRoute element={<Lobby socket={socket}/>} />} />
+          <Route exact
+            path="/:roomId"
+            element={<PrivateRoute element={<RoomPage socket={socket} users={users} />} />}
+          />
+
+        </Routes>
+      </BrowserRouter>
     </>
   );
 }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import updateStatus from '../services/setStatus';
 import { useNavigate } from "react-router-dom"
 
-function Lobby({ uuid, socket }) {
+function Lobby({ socket }) {
   const user = JSON.parse(localStorage.getItem('user'));
   const [randomplayer, setplayer] = useState(null);
   const navigate = useNavigate();
@@ -49,7 +49,20 @@ function Lobby({ uuid, socket }) {
             randomPlayer = datat.user;
             setplayer(randomPlayer);
             clearTimeout(timeoutId);
-            
+            let array = [randomPlayer.username, user.username];
+            array.sort();
+            const uuid = array.join('&');
+            const roomData = {
+              name:user.username,
+              roomId:uuid,
+              userId: user.id,
+              host: false,
+              presenter: true,
+              };
+              console.log(roomData);
+              localStorage.setItem('roomdata', JSON.stringify(roomData));
+              navigate(`/${uuid}`);
+              socket.emit("userJoined", roomData);
           }
         }
       } catch (error) {
