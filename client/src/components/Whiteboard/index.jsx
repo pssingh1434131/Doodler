@@ -11,8 +11,8 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   const [mousePointer, setMousePointer] = useState({ x: 0, y: 0, userName: "" });
   const [showname, changeshowname] = useState(true);
   const [broadcastname, changebroadcast] = useState(true);
-
-  const [isErasing, setIsErasing] = useState(false);
+  const [isEraserActive, setIsEraserActive] = useState(false);
+  const [erasedElements, setErasedElements] = useState([]);
   
 
   const drawElements = useCallback(() => {
@@ -34,6 +34,10 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
       
 
       ctx.lineWidth = element.strokeWidth || thickness;
+
+      if (isEraserActive && erasedElements.some((erasedElement) => erasedElement === element)) {
+        return;
+      }
       
       if (element.type === "ellipse") {
         roughCanvas.draw(
@@ -193,8 +197,22 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   
   const handleMouseDown = (e) => {
     const { offsetX, offsetY } = e.nativeEvent;
-
-    if (tool === "pencil") {
+    if (tool === "eraser") {
+      setIsEraserActive(true);
+      // Simulate erasing by drawing a white square
+      setElements((prevElements) => [
+        ...prevElements,
+        {
+          type: "square", // Use square type to simulate erasing
+          offsetX,
+          offsetY,
+          sideLength: thickness, // Use thickness as the side length of the square
+          stroke: "#FFFFFF", // White color to simulate erasing
+          strokeWidth: thickness, // Use the same thickness for the eraser
+        },
+      ]);
+    }
+      else if (tool === "pencil") {
       setElements((prevElements) => [
         ...prevElements,
         {
@@ -297,19 +315,28 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
       ]);
       setIsDrawing(true);
     }
-    else if (tool === "eraser") {
-      setIsErasing(true);
-    }
-    
-
     setIsDrawing(true);
-  };
+}
 
   const handleMouseMove = (e) => {
     const { offsetX, offsetY } = e.nativeEvent;
     setMousePointer({ x: offsetX, y: offsetY, userName: user.name });
     
     if (isDrawing) {
+      if ((isEraserActive && tool === "eraser")) {
+        
+        setElements((prevElements) => [
+          ...prevElements,
+          {
+            type: "square",
+            offsetX,
+            offsetY,
+            sideLength: thickness, 
+            stroke: "#FFFFFF", 
+            strokeWidth: thickness, // Using the same thickness for the eraser
+          },
+        ]);
+      }
       if (tool === "pencil") {
         const { path } = elements[elements.length - 1];
         const newPath = [...path, [offsetX, offsetY]];
@@ -375,7 +402,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
                 endX: offsetX,
                 endY: offsetY,
                 baseWidth: Math.abs(offsetX - ele.startX),
-                topWidth: Math.abs(ele.endX - ele.startX) * 0.6, // You can adjust the ratio for the top width as needed
+                topWidth: Math.abs(ele.endX - ele.startX) * 0.6, //can adjust the ratio for the top width as needed
               };
             } else {
               return ele;
@@ -407,7 +434,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
               // Update the endpoint for the line
               updatedPoints[length - 1] = { x: offsetX, y: offsetY };
   
-              // Calculate control points for the curve
+              // Calculating control points for the curve
               const controlX = (updatedPoints[0].x + offsetX) / 2;
               const controlY = (updatedPoints[0].y + offsetY) / 2;
   
@@ -424,25 +451,39 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
         );
       }
     }
-    if (isErasing) {
-      const ctx = canvasRef.current.getContext("2d");
-  
-      
-      const eraserSize = 20; // Define the size of the eraser
-      ctx.clearRect(
-        offsetX - eraserSize / 2,
-        offsetY - eraserSize / 2,
-        eraserSize,
-        eraserSize
-      );
+ 
+    if (isDrawing && isEraserActive) {           // bug to be fixed in case of line and rect 
+      const elementsToErase = elements.filter((element) => {
+        if (element.type === "rect") {
+          return (
+            offsetX >= element.offsetX &&
+            offsetX <= element.offsetX + element.width &&
+            offsetY >= element.offsetY &&
+            offsetY <= element.offsetY + element.height
+          );
+        } else if (element.type === "line") {
+         
+          const dist = Math.hypot(offsetX - element.offsetX, offsetY - element.offsetY);
+          return dist < element.strokeWidth; 
+        } else {
+          return (
+            offsetX >= element.offsetX &&
+            offsetX <= element.offsetX + element.width &&
+            offsetY >= element.offsetY &&
+            offsetY <= element.offsetY + element.height
+          );
+        }
+      });
+            
+      setErasedElements((prevErasedElements) => [...prevErasedElements, ...elementsToErase]);
     }
+    
     socket.emit("mouseMove", { x: offsetX, y: offsetY, userName: user.name });
   };
 
   const handleMouseUp = () => {
     setIsDrawing(false);
-    setIsErasing(false);
-
+    setIsEraserActive(false);
   };
 
   if (!user?.presenter) {
