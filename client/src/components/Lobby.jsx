@@ -55,9 +55,9 @@ function Lobby({ socket }) {
             const roomData = {
               name:user.username,
               roomId:uuid,
-              userId: user.id,
+              userId: user._id,
               host: false,
-              presenter: true,
+              presenter: false,
               };
               console.log(roomData);
               localStorage.setItem('roomdata', JSON.stringify(roomData));

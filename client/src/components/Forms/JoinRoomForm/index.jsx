@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min"
 
-const JoinRoomForm = ({ uuid, socket, user, setuser }) =>{
+const JoinRoomForm = ({ uuid, socket, user, setuser}) =>{
 
 
     const [roomId, setRoomId] = useState("");
@@ -15,18 +15,18 @@ const JoinRoomForm = ({ uuid, socket, user, setuser }) =>{
     const handleRoomJoin = (e)=>{
         e.preventDefault();
         if (!name) return toast.dark("Please enter your name!");
-
         const roomData = {
         name,
         roomId,
+        image:user.image,
         userId: uuid(),
         host: false,
         presenter: false,
         };
         setuser(roomData);
         localStorage.setItem('roomdata', JSON.stringify(roomData));
-        navigate(`/${roomId}`);
         socket.emit("userJoined", roomData);
+        navigate(`/${roomId}`);
     }
 
     return (
