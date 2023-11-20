@@ -144,7 +144,7 @@ const CollabRoomPage = ({ socket, users }) => {
     return (
         <div className="row" style={{ height: '100vh' }}>
             <div className="d-flex justify-content-start align-items-center" style={{ position: 'absolute', top: "10px" }}>
-                <Link to="/play" style={{ width: '10vw', minWidth: 'fit-content', padding: '0px 1vw', cursor: 'pointer' }} >
+                <Link to="/draw" style={{ width: '10vw', minWidth: 'fit-content', padding: '0px 1vw', cursor: 'pointer' }} >
                     <button
                         type="button"
                         className="btn btn-secondary"
