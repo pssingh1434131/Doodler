@@ -5,8 +5,8 @@ import "bootstrap/dist/js/bootstrap.bundle.min";
 
 const roughGenerator = rough.generator();
 
-const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, user, socket, thickness, setThickness }) => {
-  const [img, setImg] = useState(null);
+const CollabWhiteBoard = ({ canvasRef, ctxRef, elements, setElements, tool, color, user, socket, thickness, setThickness }) => {
+  /*const [img, setImg] = useState(null);*/
   const [isDrawing, setIsDrawing] = useState(false);
   const [mousePointer, setMousePointer] = useState({ x: 0, y: 0, userName: "" });
   const [showname, changeshowname] = useState(true);
@@ -148,12 +148,24 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
       ctxRef.current.fillText(mousePointer.userName, mousePointer.x, mousePointer.y + 10);
     }
   }, [canvasRef, ctxRef, elements, color, mousePointer.x, mousePointer.y, mousePointer.userName, showname, thickness]);
+
+
  
   useEffect(() => {
-    socket.on("whiteBoardDataResponse", (data) => {
-      setImg(data.imgURL);
-    });
+   socket.on("whiteBoardDataCollabResponse", (data)=>{
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext("2d");
+      var image = new Image();
+      image.onload = function() {
+        ctx.drawImage(image, 0, 0);
+      };
+      image.src = data.imgURL;
+    }
+  })
   }, [socket, canvasRef]);
+
+  
+
 
   useEffect(() => {
     socket.on("mouseMove", ({ x, y, userName }) => {
@@ -189,8 +201,10 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     }
 
     drawElements();
+
     const canvasImage = canvasRef.current.toDataURL();
-    socket.emit("whiteboardData", canvasImage);
+    socket.emit("whiteboardDataCollab", canvasImage);
+
   }, [elements, canvasRef, socket, ctxRef, drawElements]);
 
 
@@ -487,7 +501,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     setIsEraserActive(false);
   };
 
-  if (!user?.presenter) {
+  /*if (!user?.presenter) {
     return (
       <div
         className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3"
@@ -504,6 +518,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
       </div>
     );
   }
+  */
 
   return (
     <>
@@ -548,4 +563,4 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   );
 };
 
-export default Whiteboard;
+export default CollabWhiteBoard;

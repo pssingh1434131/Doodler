@@ -35,7 +35,7 @@ function HomeBody() {
         <strong style={{ textAlign: 'center', color: 'white', fontSize: 'calc(1vh + 1vw + 10px)', textDecoration: 'underline' }}>PLAY NOW</strong>
         <Link style={{textAlign:'center'}} to='/lobby'><button className='playbtn' style={{ backgroundColor: 'red', minHeight:'fit-content' }}>PLAY ONLINE</button></Link>
         <Link style={{textAlign:'center'}} to='/play'><button className='playbtn' style={{ backgroundColor: 'green',minHeight:'fit-content'  }}>PLAY WITH FRIENDS</button></Link>
-        <Link style={{textAlign:'center'}} to='/play'><button className='playbtn' style={{ backgroundColor: 'blue', minHeight:'fit-content'  }}>PLAY WITH COMPUTER</button></Link>
+        <Link style={{textAlign:'center'}} to='/draw'><button className='playbtn' style={{ backgroundColor: 'blue', minHeight:'fit-content'  }}>DRAW TOGETHER</button></Link>
       </div>
       <div className='d-flex align-items-center justify-content-around flex-row' style={{ height: '60vh', color: 'white', flex: '0.7', backgroundColor: 'rgba(68, 68, 193, 0.8)', borderRadius: ' 0 50px 50px 0', borderLeft: "3px solid white" }}>
         {gameHistory && <div className='d-flex align-items-center flex-column' style={{ width: '45%', height: '95%', justifyContent: 'space-evenly' }}>
