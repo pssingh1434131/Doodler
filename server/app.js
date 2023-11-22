@@ -6,7 +6,7 @@ const http = require('http');
 const bodyParser = require('body-parser');
 const cookieparser = require('cookie-parser');
 const { Server } = require('socket.io');
-const {getFriends, sendFriendRequest, receiveFriendRequest, deleteFriendRequest, acceptFriendreq, deleteFriendship} = require('./controller/friendControl');
+const { getFriends, sendFriendRequest, receiveFriendRequest, deleteFriendRequest, acceptFriendreq, deleteFriendship } = require('./controller/friendControl');
 const { addUser, getUser, removeUser } = require("./utils/users");
 const { getmessages, sendmessages } = require('./controller/chatControl');
 
@@ -54,7 +54,8 @@ app.use('/user', userRouter);
 app.use('/game', gameRouter);
 app.use('/friend', friendRouter);
 
-let userRoom,imgUrl;
+let userRoom, imgUrl, numberofplayers = 0;
+let scores = [0, 0, 0, 0, 0];
 
 io.on('connection', (socket) => {
   socket.on("join_room", async (username) => {
@@ -67,67 +68,78 @@ io.on('connection', (socket) => {
     io.to(username).emit('getcurfriends', data);
   });
 
-  socket.on('sendrequest',async (options,callback)=>{
+  socket.on('sendrequest', async (options, callback) => {
     const to = options.to;
     const from = options.from;
-    const datat = await sendFriendRequest(to,from);
+    const datat = await sendFriendRequest(to, from);
     let data = datat.data;
-    if(datat.success) io.to(to).emit('getpendingreq', data);
+    if (datat.success) io.to(to).emit('getpendingreq', data);
     callback(datat.msg);
   })
 
-  socket.on('deletereq',async (options,callback)=>{
+  socket.on('deletereq', async (options, callback) => {
     const id = options.id;
     const data = await deleteFriendRequest(id);
-    if(data.success) callback({success:true,msg:'request is denied'});
-    else callback({success:false,msg:'error in denying the request'});
+    if (data.success) callback({ success: true, msg: 'request is denied' });
+    else callback({ success: false, msg: 'error in denying the request' });
   })
 
-  socket.on('deletefreind',async (options,callback)=>{
+  socket.on('deletefreind', async (options, callback) => {
     const id = options.id;
     const username = options.username;
     const data = await deleteFriendship(id);
-    if(data.success) {
-      if(username===data.data.person1) {
+    if (data.success) {
+      if (username === data.data.person1) {
         let datat = await getFriends(data.data.person2);
         io.to(data.data.person2).emit('getcurfriends', datat.data);
       }
-      else{
+      else {
         let datat = await getFriends(data.data.person1);
         io.to(data.data.person1).emit('getcurfriends', datat.data);
       }
-      callback({success:true,msg:'friendship is removed'});
+      callback({ success: true, msg: 'friendship is removed' });
     }
-    else callback({success:false,msg:'error in removing friend'});
+    else callback({ success: false, msg: 'error in removing friend' });
   })
 
-  socket.on('acceptRequest',async (options,callback)=>{
+  socket.on('acceptRequest', async (options, callback) => {
     const id = options.id;
     const username = options.username;
     const data = await acceptFriendreq(id);
-    if(data.success) 
-    {
-      if(username===data.data.person1) {
+    if (data.success) {
+      if (username === data.data.person1) {
         let datat = await getFriends(data.data.person2);
         io.to(data.data.person2).emit('getcurfriends', datat.data);
       }
-      else{
+      else {
         let datat = await getFriends(data.data.person1);
         io.to(data.data.person1).emit('getcurfriends', datat.data);
       }
-      callback({success:true,msg:'accepted request',friends: data.data});
+      callback({ success: true, msg: 'accepted request', friends: data.data });
     }
-    else callback({success:false,msg:'error in accepting the request',friends: null});
+    else callback({ success: false, msg: 'error in accepting the request', friends: null });
   })
 
-  socket.on("userJoined", (data) => {
-    const { name, userId, roomId, host, presenter} = data;
+  socket.on("userJoined", ({ roomData, numberofplayer }) => {
+    const { name, userId, image, roomId, host, presenter, score } = roomData;
+    if (numberofplayer) {
+      numberofplayers = numberofplayer;
+    }
     userRoom = roomId;
+    imgUrl = undefined;
     socket.join(roomId);
-    
-    const users = addUser({ name, userId, roomId, host, presenter, socketId:socket.id });
 
-    socket.emit("userIsJoined", { success: true, users });
+    const users = addUser({ name, userId, image, roomId, host, presenter, socketId: socket.id, score });
+
+    if (numberofplayers === users.length) {
+      users[0].presenter = true;
+    }
+    if (!numberofplayer) {
+      socket.emit("userIsJoined", { success: true, users, numberofplayers });
+    }
+    if (numberofplayer) {
+      socket.emit("userIsJoined", { success: true, users });
+    }
     socket.broadcast.to(userRoom).emit("userJoinedMessageBroadcasted", name)
 
     socket.broadcast.to(userRoom).emit("allUsers", users)
@@ -136,66 +148,90 @@ io.on('connection', (socket) => {
     socket.broadcast.to(userRoom).emit("whiteBoardDataResponse", {
       imgURL: imgUrl,
     });
-});
+  });
 
-socket.on("whiteboardData", (data) => {
+  socket.on("whiteboardData", (data) => {
     imgUrl = data;
     //console.log("updated image->")
     socket.broadcast.to(userRoom).emit("whiteBoardDataResponse", {
       imgURL: data,
     });
-});
+  });
 
-  socket.on("message", (data)=>{
+  socket.on("message", (data) => {
     const filteredword = data;
     const user = getUser(socket.id);
-    if(user){
-      socket.broadcast.to(userRoom).emit("messageResponse", {filteredword, name: user.name})
+    if (user) {
+      socket.broadcast.to(userRoom).emit("messageResponse", { filteredword, name: user.name })
     }
-    
+
   })
 
 
-  socket.on("disconnect", (data)=>{
+  socket.on("disconnect", (data) => {
     const user = getUser(socket.id);
     //console.log("disconnected",user);
-    if(user){
+    if (user) {
       removeUser(socket.id);
       socket.broadcast.to(userRoom).emit("userLeftMessageBroadcasted", user.name)
-    } 
+    }
   })
 
-  socket.on("Userdisconnect", (user)=>{
+  socket.on("Userdisconnect", (user) => {
     const userCurrent = getUser(socket.id);
     //console.log("disconnected",user);
-    if(userCurrent){
+    if (userCurrent) {
       removeUser(socket.id);
       socket.broadcast.to(userRoom).emit("userLeftMessageBroadcasted", userCurrent.name)
-    } 
+    }
   })
 
   socket.on("joinchatroom", async (username) => {
     socket.join(username);
     datat = await getFriends(username);
     data = datat.data;
-    if(datat.success) io.to(username).emit('getfriendlist', data);
+    if (datat.success) io.to(username).emit('getfriendlist', data);
     else io.to(username).emit('getfriendlist', []);
   });
 
   socket.on('getmessages', async (options, callback) => {
     const datat = await getmessages(options.person1, options.person2);
     const data = datat.data;
-    if(datat.success) callback({ data: data, success: true });
+    if (datat.success) callback({ data: data, success: true });
     else callback({ data: [], success: false });
   })
 
   socket.on('sendmessage', async (options, callback) => {
     const datat = await sendmessages(options.msg1.to, options.msg1.from, options.msg1);
     const data = datat.data;
-    if(datat.success) {
+    if (datat.success) {
       io.to(options.msg1.to).emit('recievemsg', data);
       callback({ data: data, success: true });
     }
     else callback({ data: null, success: false });
+  })
+
+  socket.on('whatisdrawn', (draw) => {
+    draw = draw.toLowerCase();
+    socket.broadcast.to(userRoom).emit("drawing", draw);
+  })
+
+  socket.on('updateuserarray', ({ ind, data }) => {
+    setTimeout(() => {
+      let len = data.length;
+      for (let i = 0; i < data.length; i++) {
+        data[i].score += scores[i];
+      }
+      data[ind % len].presenter = false;
+      data[(ind + 1) % len].presenter = true;
+      scores.fill(0);
+      io.to(userRoom).emit("updatedusersarray", data);
+    }, 60000);
+  })
+
+  socket.on('takescore', (score) => {
+    for (let i = 0; i < score.length; i++) {
+      scores[i] = score[i];
+    }
   })
 });

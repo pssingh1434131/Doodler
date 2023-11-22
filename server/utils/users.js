@@ -2,10 +2,11 @@ const users = [];
 
 // Join user to chat
 
-const addUser = ({name, userId, roomId, host, presenter, socketId}) => {
-  const user = {name, userId, roomId, host, presenter, socketId};
+const addUser = ({name, userId,image, roomId, host, presenter, socketId, score}) => {
+  const user = {name, userId, image, roomId, host, presenter, socketId, score};
   users.push(user);
-  return users.filter((user)=>user.roomId===roomId);;
+  users.sort((a, b) => a.name.localeCompare(b.name));
+  return users.filter((user)=>user.roomId===roomId);
 };
 
 // User leaves chat

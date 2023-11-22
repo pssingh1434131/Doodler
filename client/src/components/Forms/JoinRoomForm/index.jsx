@@ -22,10 +22,9 @@ const JoinRoomForm = ({ uuid, socket, user, setuser}) =>{
         userId: uuid(),
         host: false,
         presenter: false,
+        score:0
         };
-        setuser(roomData);
-        localStorage.setItem('roomdata', JSON.stringify(roomData));
-        socket.emit("userJoined", roomData);
+        socket.emit("userJoined", {roomData, numberofplayer:undefined});
         navigate(`/${roomId}`);
     }
 

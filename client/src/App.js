@@ -25,7 +25,8 @@ const socket = io(server, connectionOptions);
 
 function App() {
   const [users, setUsers] = useState([]);
-  const [numberofplayer, setplayercount] = useState("");
+  const [round, setround] = useState(1);
+  const [numberofplayer, setplayercount] = useState(2);
   const PrivateRoute = ({ element, path }) => {
     const user = JSON.parse(localStorage.getItem('user'));
     return user ? element : <Navigate to="/" />;
@@ -39,6 +40,10 @@ function App() {
     const handleUserJoined = (data) => {
       if (data.success) {
         setUsers(data.users);
+        setround(1);
+        if(data.numberofplayers){
+          setplayercount(data.numberofplayers);
+        }
       } else {
         console.log("userJoined error");
       }
@@ -123,7 +128,7 @@ function App() {
             element={<PrivateRoute element={<Lobby socket={socket}/>} />} />
           <Route exact
             path="/:roomId"
-            element={<PrivateRoute element={<RoomPage uses ={users} setUsers = {setUsers} socket={socket} numberofplayer={numberofplayer}/>} />}
+            element={<PrivateRoute element={<RoomPage users ={users} setUsers={setUsers} socket={socket} round={round} setround={setround} numberofplayer={numberofplayer}/>} />}
           />
 
         </Routes>

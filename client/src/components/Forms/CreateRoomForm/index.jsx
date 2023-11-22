@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min"
 
-const CreateRoomForm = ({ uuid, socket, user, setuser, numberofplayer, setplayercount }) => {
+const CreateRoomForm = ({ uuid, socket, user, numberofplayer, setplayercount }) => {
 
     const [roomId, setRoomId] = useState(uuid());
     
@@ -28,10 +28,9 @@ const CreateRoomForm = ({ uuid, socket, user, setuser, numberofplayer, setplayer
             userId: uuid(),
             host: true,
             presenter: false,
+            score:0
         };
-        setuser(roomData);
-        localStorage.setItem('roomdata', JSON.stringify(roomData));
-        socket.emit("userJoined", roomData);
+        socket.emit("userJoined", {roomData, numberofplayer});
         navigate(`/${roomId}`);
     }
 
