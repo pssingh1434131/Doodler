@@ -4,8 +4,8 @@ import Loginpage from "./components/Loginpage";
 import Signuppage from "./components/Signuppage";
 import Chat from "./components/Chat";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
+import { useState, useEffect} from "react";
+import { ToastContainer, toast} from "react-toastify";
 import io from "socket.io-client"
 import Forms from './components/Forms/index'
 import RoomPage from './pages/RoomPage';
@@ -25,6 +25,8 @@ const socket = io(server, connectionOptions);
 
 function App() {
   const [users, setUsers] = useState([]);
+  const [round, setround] = useState(1);
+  const [numberofplayer, setplayercount] = useState(2);
   const PrivateRoute = ({ element, path }) => {
     const user = JSON.parse(localStorage.getItem('user'));
     return user ? element : <Navigate to="/" />;
@@ -33,10 +35,15 @@ function App() {
     const user = JSON.parse(localStorage.getItem('user'));
     return user ? <Navigate to="/home" /> : element;
   }
+
   useEffect(() => {
     const handleUserJoined = (data) => {
       if (data.success) {
         setUsers(data.users);
+        setround(1);
+        if(data.numberofplayers){
+          setplayercount(data.numberofplayers);
+        }
       } else {
         console.log("userJoined error");
       }
@@ -68,7 +75,7 @@ function App() {
       socket.off("userJoinedMessageBroadcasted", handleUserJoinedMessage);
       socket.off("userLeftMessageBroadcasted", handleUserLeftMessage);
     };
-  }, []);
+  }, [socket]);
 
   const uuid = () => {
     let S4 = () => {
@@ -115,13 +122,13 @@ function App() {
           />
           <Route exact
             path="/play"
-            element={<PrivateRoute element={<Forms uuid={uuid} socket={socket} />} />} />
+            element={<PrivateRoute element={<Forms uuid={uuid} socket={socket} numberofplayer={numberofplayer} setplayercount={setplayercount}/>} />} />
           <Route exact
             path="/lobby"
-            element={<PrivateRoute element={<Lobby socket={socket}/>} />} />
+            element={<PrivateRoute element={<Lobby socket={socket} numberofplayer={numberofplayer}/>} />} />
           <Route exact
             path="/:roomId"
-            element={<PrivateRoute element={<RoomPage socket={socket} users={users} />} />}
+            element={<PrivateRoute element={<RoomPage users ={users} setUsers={setUsers} socket={socket} round={round} setround={setround} numberofplayer={numberofplayer}/>} />}
           />
 
         </Routes>

@@ -483,9 +483,38 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
 
   if (!user?.presenter) {
     return (
+      <>
+        <div className="col-md-8 form-check form-switch px-0 mx-auto">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="flexSwitchCheckDefault"
+          onClick={() => {
+            changeshowname(!showname);
+          }}
+        />
+        <label className="form-check-label" htmlFor="flexSwitchCheckDefault">
+          {showname === true ? "Don't show name with mouse pointer" : "Show name with mouse pointer"}
+        </label>
+      </div>
+      <div className="col-md-8 form-check form-switch px-0 mx-auto">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="flexSwitchCheckDefault"
+          onClick={() => {
+            changebroadcast(!broadcastname);
+          }}
+        />
+        <label className="form-check-label" htmlFor="flexSwitchCheckDefault">
+          {broadcastname === true ? "Don't broadcast your name" : "Broadcast your name"}
+        </label>
+      </div>
       <div
         className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3"
-        style={{ height: "60vh", width: "100%", backgroundColor: "white", borderRadius: "20px" }}
+        style={{ height: "70vh", width: "100%", backgroundColor: "white", borderRadius: "20px" }}
       >
         <img
           src={img}
@@ -496,6 +525,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
           }}
         />
       </div>
+      </> 
     );
   }
 
@@ -527,7 +557,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
       </div>
       <div
         className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3"
-        style={{ height: "60vh", width: "100%", backgroundColor: "white", borderRadius: "20px" }}
+        style={{ height: "70vh", width: "100%", backgroundColor: "white", borderRadius: "20px" }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}

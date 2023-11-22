@@ -2,7 +2,7 @@ const users = [];
 
 // Join user to chat
 
-const addUser = ({name, userId, roomId, host, presenter, socketId}) => {
+const addUser = ({name, userId,image, roomId, host, presenter, socketId, score}) => {
   let boolean = false;
   users.forEach(element => {
     if(element.name===name) {
@@ -10,8 +10,9 @@ const addUser = ({name, userId, roomId, host, presenter, socketId}) => {
     }
   });
   if(boolean) return users.filter((user)=>user.roomId===roomId);
-  const user = {name, userId, roomId, host, presenter, socketId};
+  const user = {name, userId, image, roomId, host, presenter, socketId, score};
   users.push(user);
+  users.sort((a, b) => a.name.localeCompare(b.name));
   return users.filter((user)=>user.roomId===roomId);
 };
 

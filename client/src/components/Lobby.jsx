@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import updateStatus from '../services/setStatus';
 import { useNavigate } from "react-router-dom"
 
-function Lobby({ socket }) {
+function Lobby({ socket, numberofplayer }) {
   const user = JSON.parse(localStorage.getItem('user'));
   const [randomplayer, setplayer] = useState(null);
   const navigate = useNavigate();
@@ -41,26 +41,19 @@ function Lobby({ socket }) {
   let randomPlayer = null;
   socket.on('reqforjoinroom', (data) => {
     if (timet) clearTimeout(timet);
-    console.log('yes');
     let str = data.roomId;
-    const tokens = str.split('&');
     let roomData = {
       name: user.username,
       roomId: str,
       userId: user._id,
+      image: user.image,
       host: false,
-      presenter: true,
+      presenter: false,
+      score:0
     };
     randomPlayer = data.player1.username === user.username ? data.player2 : data.player1;
     setplayer(randomPlayer)
-    if (tokens[0] === user.name) {
-      roomData.presenter = true;
-    }
-    else {
-      roomData.presenter = false;
-    }
-    localStorage.setItem('roomdata', JSON.stringify(roomData));
-    socket.emit("userJoined", roomData);
+    socket.emit("userJoined", {roomData, numberofplayer});
     navigate(`/${str}`);
   })
 

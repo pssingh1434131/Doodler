@@ -13,27 +13,22 @@ function Signup() {
 
   const handleemailchange = (event) => {
     setformData({ ...formData, email: event.target.value });
-    console.log(formData, confpass);
   };
 
   const handlepasschange = (event) => {
     setformData({ ...formData, password: event.target.value });
-    console.log(formData, confpass);
   };
 
   const handleconfpasschange = (event) => {
     setconfpass(event.target.value);
-    console.log(formData, confpass);
   };
 
   const handlenamechange = (event) => {
     setformData({ ...formData, name: event.target.value });
-    console.log(formData, confpass);
   };
 
   const handleunamechange = (event) => {
     setformData({ ...formData, username: event.target.value });
-    console.log(formData, confpass);
   };
 
   const submitForm = async (e) => {

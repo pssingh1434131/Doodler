@@ -7,14 +7,13 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min"
 import { BsDownload } from 'react-icons/bs';
 import updateStatus from "../../services/setStatus";
+import { toast } from "react-toastify";
+import Result from "../../components/Result"
 
-const RoomPage = ({ socket, users }) => {
-    const user = JSON.parse(localStorage.getItem('roomdata'));
-
+const RoomPage = ({ users, setUsers, socket, round, setround, numberofplayer }) => {
+    const user = JSON.parse(localStorage.getItem('user'));
     const canvasRef = useRef(null);
     const ctxRef = useRef(null);
-
-
     const [tool, setTool] = useState("pencil");
     const [color, setColor] = useState("black");
     const [elements, setElements] = useState([]);
@@ -24,12 +23,41 @@ const RoomPage = ({ socket, users }) => {
     const [chat, setChat] = useState([]);
     const [selectedShape, setSelectedShape] = useState("");
     const [thickness, setThickness] = useState(5);
+    const [guess, setguess] = useState("");
+    const [draw, setdraw] = useState("");
+    const [myindex, setIndex] = useState(1);
+    const [countdown, setCountdown] = useState(5);
+    const [attempts, setattempts] = useState(3);
+    const [scores, setscore] = useState(Array.from({ length: numberofplayer }, () => 0));
 
+    let timerId;
+    useEffect(() => {
+        if (users.length === numberofplayer && countdown > 0) {
+            timerId = setInterval(() => {
+                setCountdown((prevCountdown) => prevCountdown - 1);
+            }, 1000);
+        }
+        return () => clearInterval(timerId);
+    }, [users, countdown]);
+
+    useEffect(() => {
+        if (countdown == 0) {
+            let ind = -1;
+            for (let i = 0; i < users.length; i++) {
+                if (users[i].name === user.username) {
+                    setIndex(i);
+                    ind = i;
+                    break;
+                }
+            }
+            if (users[ind].presenter&&round<=3) {
+                socket.emit("updateuserarray", { ind: ind, data: users});
+            }
+        }
+    }, [countdown])
 
     useEffect(() => {
         updateStatus('busy');
-
-        // Set the status to 'offline' when the user leaves the page
         const handleBeforeUnload = () => {
             updateStatus('offline');
         };
@@ -41,17 +69,29 @@ const RoomPage = ({ socket, users }) => {
             window.removeEventListener('beforeunload', handleBeforeUnload);
         };
     }, []);
+
     useEffect(() => {
         const handleReceivedMessage = (data) => {
             setChat((prevChats) => [...prevChats, data]);
         };
 
-        // Subscribing to the "messageResponse" event
-        socket.on("messageResponse", handleReceivedMessage);
+        const handledrawingword = (draw) => {
+            setdraw(draw);
+        }
 
-        // Cleaning up the event listener
+        const updateuserarray = (data) => {
+            if (data[0].presenter) setround((prev) => prev + 1);
+            setUsers(data);
+        };
+
+        socket.on("messageResponse", handleReceivedMessage);
+        socket.on("drawing", handledrawingword);
+        socket.on("updatedusersarray", updateuserarray);
+
         return () => {
             socket.off("messageResponse", handleReceivedMessage);
+            socket.off("drawing", handledrawingword);
+            socket.off("updatedusersarray", updateuserarray);
         };
     }, [socket]);
 
@@ -67,29 +107,31 @@ const RoomPage = ({ socket, users }) => {
         tempCtx.fillStyle = 'white'; // Set white background
         tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-        // Draw the content from the original canvas onto the temporary canvas
         tempCtx.drawImage(canvas, 0, 0, canvas.width * scaleFactor, canvas.height * scaleFactor);
 
 
         tempCanvas.toBlob((blob) => {
 
             const link = document.createElement('a');
-            link.download = 'whiteboard_drawing.png'; //Can Change the file name and extension as needed
+            link.download = 'whiteboard_drawing.png';
 
             link.href = window.URL.createObjectURL(blob);
             link.click();
 
-            window.URL.revokeObjectURL(link.href); // Clean up the Blob URL after download
+            window.URL.revokeObjectURL(link.href);
 
         }, 'image/png');
     };
 
 
 
+    const handleguesssubmit = () => {
+        socket.emit("whatisdrawn", draw);
+        setdraw("");
+    }
 
     const handleDisconnect = () => {
-        // Emit an event to signal the user's disconnection
-        socket.emit("Userdisconnect", user); // 'user' contains user information
+        socket.emit("Userdisconnect", user);
     };
     const handleClearCanvas = () => {
         const canvas = canvasRef.current;
@@ -126,7 +168,6 @@ const RoomPage = ({ socket, users }) => {
         setElements((prevElements) =>
             prevElements.map((element, index) => {
                 if (index === prevElements.length) {
-                    // Apply new thickness only to the current drawing element
                     return {
                         ...element,
                         strokeWidth: newThickness,
@@ -137,217 +178,308 @@ const RoomPage = ({ socket, users }) => {
         );
     };
 
+    const guessedword = () => {
+        let score;
+        if (attempts === 3) {
+            score = 100;
+        }
+        else if (attempts === 2) {
+            score = 50;
+        }
+        else if (attempts === 1) {
+            score = 20;
+        }
+        let guessed = guess.toLowerCase();
+        if (guessed === draw) {
+            let tempscore = scores;
+            tempscore[myindex] = score;
+            setscore(tempscore);
+            setattempts(3);
+            socket.emit("takescore", scores);
+        }
+        else {
+            toast.error("Incorrect guess, " + (attempts - 1) + " attemps remaining");
+        }
+        setattempts(attempts - 1);
+        setguess("");
+    };
 
+    if (round === 4) {
+        return (<div className="d-flex justify-content-center align-items-center" style={{ height: '100vh', width: '100vw' }}>
+            <Result users={users} myindex={myindex} />
+        </div>)
+    }
 
     return (
-        <div className="row" style={{ height: '100vh' }}>
-            <div className="d-flex justify-content-start align-items-center" style={{ position: 'absolute', top: "10px" }}>
-                <Link to="/play" style={{ width: '10vw', minWidth: 'fit-content', padding: '0px 1vw', cursor: 'pointer' }} >
-                    <button
-                        type="button"
-                        className="btn btn-secondary"
-                        style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content', zIndex: 1 }}
-                        onClick={() => handleDisconnect()}
-                    >
-                        &laquo; BACK
-                    </button></Link>
-            </div>
-
-            <div className="d-flex justify-content-end align-items-center" style={{ position: 'absolute', top: "20px", marginRight: "50px" }}>
-                <button
-                    type="button"
-                    className="btn btn-secondary d-flex align-items-center"
-                    style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content', zIndex: 1, margin: '0px 1vw', fontSize: '18px' }}
-                    onClick={handleDownload}
-                >
-                    <BsDownload style={{ marginRight: '5px' }} />
-                    <strong>Download</strong>
-                </button>
-            </div>
-
-            <div className="d-flex justify-content-start align-items-center" style={{position:'absolute', top: "10px", marginLeft:"200px"}}>
-                <button
-                    type="button"
-                    className="btn btn-dark"
-                    style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content', zIndex: 1, margin: '0px 1vw' }}
-                    onClick={() => setOpenedUserTab(true)}
-                >
-                    Active users:  {users.length}
-                </button>
-                <button
-                    type="button"
-                    className="btn btn-primary"
-                    style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content', zIndex: 1, margin: '0px 1vw' }}
-                    onClick={() => setOpenedChatTab(true)}
-                >
-                    Chats
-                </button>
-            </div>
-
-            {
-                openedUserTab && (
-                    <div
-                        className="position-fixed top-0 h-100 text-white bg-dark"
-                        style={{ width: "15vw", left: "0%", zIndex: 2, background: "white" }}>
+        <>
+            {users.length === numberofplayer ?
+                <div className="row" style={{ height: '100vh' }}>
+                    <div className="d-flex justify-content-between align-items-center">
+                        <Link to="/home" style={{ margin: '0px 2vw' }} >
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content', zIndex: 1 }}
+                                onClick={() => handleDisconnect()}
+                            >
+                                &laquo; BACK
+                            </button></Link>
+                        <div className="d-flex align-items-center justify-content-start" style={{ width: '70vw' }}>
+                            <button
+                                type="button"
+                                className="btn btn-dark"
+                                style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content', zIndex: 1, margin: '0px 1vw' }}
+                                onClick={() => setOpenedUserTab(true)}
+                            >
+                                Active users:  {users.length}
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-primary"
+                                style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content', zIndex: 1, margin: '0px 1vw' }}
+                                onClick={() => setOpenedChatTab(true)}
+                            >
+                                Chats
+                            </button>
+                        </div>
+                        <strong style={{ fontSize: '5vh', display: 'block', width: '100vw', position: 'absolute', textAlign: 'center', color: 'black' }}>
+                            Round {round}
+                        </strong>
                         <button
                             type="button"
-                            onClick={() => setOpenedUserTab(false)}
-                            className="btn btn-light btn-block w-100 mt-5"
+                            className="btn btn-secondary d-flex align-items-center"
+                            style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content', zIndex: 1, margin: '0px 1vw', fontSize: '18px' }}
+                            onClick={handleDownload}
                         >
-                            Close
+                            <BsDownload style={{ marginRight: '5px' }} />
+                            <strong>Download</strong>
                         </button>
-                        {
-                            <div className="w-100 mt-5 pt-5">
+                    </div>
+
+                    {
+                        openedUserTab && (
+                            <div
+                                className="position-fixed top-0 h-100 text-white bg-dark"
+                                style={{ width: "15vw", left: "0%", zIndex: 2, background: "white" }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setOpenedUserTab(false)}
+                                    className="btn btn-light btn-block w-100 mt-5"
+                                >
+                                    Close
+                                </button>
                                 {
-                                    users.map((usr, index) => (
-                                        <p key={index * 999} className="my-2  text-center w-100" style={{ border: '1px solid white', borderRadius: '5px', padding: '1px 0px' }}>
-                                            {usr.name} {user && user.name === usr.name && "(You)"}
-                                        </p>
-                                    ))
+                                    <div className="w-100 mt-5 pt-5">
+                                        {
+                                            users.map((usr, index) => (
+                                                <p key={index * 999} className="my-2  text-center w-100" style={{ border: '1px solid white', borderRadius: '5px', padding: '1px 0px' }}>
+                                                    {usr.name} {users[myindex].userId === usr.userId && "(You)"}
+                                                </p>
+                                            ))
+                                        }
+                                    </div>
                                 }
                             </div>
-                        }
-                    </div>
-                )
-            }
-            {
-                openedChatTab && (
-                    <Chat setOpenedChatTab={setOpenedChatTab} socket={socket} chat={chat} setChat={setChat} />
-                )
-            }
-            <div className="text-center" style={{ fontWeight: "bold"}}></div>
-            {
-                <div className="col-md-10 mx-auto px-1 mb-3 d-flex align-items-center justify-content-center">
-                    <div className="d-flex col-md-3 gap-3 justify-content-center gap-1">
-                        <div className="d-flex gap-1">
-                            <label htmlFor="pencil" style={{ fontWeight: "bold", fontSize: "16px" }}>Pencil</label>
-                            <input
-                                type="radio"
-                                name="tool"
-                                id="pencil"
-                                value="pencil"
-                                checked={tool === "pencil"}
-                                className="mt-1"
-                                onChange={(e) => setTool(e.target.value)}
-                                disabled={!user?.presenter}
-                            />
-                        </div>
-                        <div className="d-flex gap-1">
-                            <label htmlFor="line" style={{ fontWeight: "bold", fontSize: "16px" }} >Line</label>
-                            <input
-                                type="radio"
-                                name="tool"
-                                id="line"
-                                value="line"
-                                checked={tool === "line"}
-                                className="mt-1"
-                                onChange={(e) => setTool(e.target.value)}
-                                disabled={!user?.presenter}
-                            />
-                        </div>
-                        <div >
-                            <div className="shapes-container">
-                                <label htmlFor="shape" style={{ marginRight: '5px', fontWeight: "bold", fontSize: "16px" }}>Shapes:</label>
-                                <select
-                                    id="shape"
-                                    value={selectedShape}
-                                    onChange={(e) => {
-                                        setSelectedShape(e.target.value); // Update the selected shape when the dropdown value changes
-                                        setTool(e.target.value); // Set the tool based on the selected shape
-                                    }}
+                        )
+                    }
+                    {
+                        openedChatTab && (
+                            <Chat setOpenedChatTab={setOpenedChatTab} socket={socket} chat={chat} setChat={setChat} />
+                        )
+                    }
+                    {
+                        <div className="col-md-10 mx-auto px-1 d-flex align-items-center justify-content-center">
+                            <div className="d-flex col-md-3 gap-3 justify-content-center gap-1">
+                                <div className="d-flex gap-1">
+                                    <label htmlFor="pencil" style={{ fontWeight: "bold", fontSize: "16px" }}>Pencil</label>
+                                    <input
+                                        type="radio"
+                                        name="tool"
+                                        id="pencil"
+                                        value="pencil"
+                                        checked={tool === "pencil"}
+                                        className="mt-1"
+                                        onChange={(e) => setTool(e.target.value)}
+                                        disabled={!(users[myindex].presenter)}
+                                    />
+                                </div>
+                                <div className="d-flex gap-1">
+                                    <label htmlFor="line" style={{ fontWeight: "bold", fontSize: "16px" }} >Line</label>
+                                    <input
+                                        type="radio"
+                                        name="tool"
+                                        id="line"
+                                        value="line"
+                                        checked={tool === "line"}
+                                        className="mt-1"
+                                        onChange={(e) => setTool(e.target.value)}
+                                        disabled={!(users[myindex].presenter)}
+                                    />
+                                </div>
+                                <div >
+                                    <div className="shapes-container">
+                                        <label htmlFor="shape" style={{ marginRight: '5px', fontWeight: "bold", fontSize: "16px" }}>Shapes:</label>
+                                        <select
+                                            id="shape"
+                                            value={selectedShape}
+                                            onChange={(e) => {
+                                                setSelectedShape(e.target.value); // Update the selected shape when the dropdown value changes
+                                                setTool(e.target.value); // Set the tool based on the selected shape
+                                            }}
+                                            disabled={!(users[myindex].presenter)}
+                                        >
+                                            <option value="">Choose</option>
+                                            <option value="rect">Rectangle</option>
+                                            <option value="circle">Circle</option>
+                                            <option value="square">Square</option>
+                                            <option value="trapezium">Trapezium</option>
+                                            <option value="ellipse">Ellipse</option>
+                                            <option value="quadraticCurvy">Curve</option>
 
-                                >
-                                    <option value="">Choose</option>
-                                    <option value="rect">Rectangle</option>
-                                    <option value="circle">Circle</option>
-                                    <option value="square">Square</option>
-                                    <option value="trapezium">Trapezium</option>
-                                    <option value="ellipse">Ellipse</option>
-                                    <option value="quadraticCurvy">Curve</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="d-flex gap-1">
+                                <label htmlFor="eraser" style={{ marginLeft: "20px", fontWeight: "bold", fontSize: "16px" }}>Eraser</label>
+                                <input
+                                    type="radio"
+                                    name="tool"
+                                    id="eraser"
+                                    value="eraser"
+                                    checked={tool === "eraser"}
+                                    className="mt-1"
+                                    onChange={(e) => setTool(e.target.value)}
+                                    disabled={!(users[myindex].presenter)}
+                                />
+                            </div>
 
-                                </select>
+                            <div className="whiteboard-container">
+                                {/* Thickness adjuster */}
+                                <div className="thickness-slider">
+                                    <label htmlFor="thickness" style={{ fontWeight: "bold", fontSize: "16px" }}>Thickness:</label>
+                                    <input
+                                        type="range"
+                                        id="thickness"
+                                        min="1"
+                                        max="20"
+                                        value={thickness}
+                                        disabled={!(users[myindex].presenter)}
+                                        onChange={(e) => handleThicknessChange(parseInt(e.target.value))}
+                                        style={{
+                                            background: `linear-gradient(to right, ${color}, ${color} ${((thickness - 1) / 19) * 100}%, #d3d3d3 ${(thickness / 20) * 100}%, #d3d3d3)`,
+                                        }}
+                                    />
+                                    <span>{thickness}</span>
+                                </div>
+                            </div>
+
+                            <div className="col-md-2 mx-auto">
+                                <div className="d-flex align-items-center ">
+                                    <label htmlFor="color" style={{ fontWeight: "bold", fontSize: "16px" }}>Select Color: </label>
+                                    <input
+                                        type="color"
+                                        id="color"
+                                        className="mt-1 ms-2"
+                                        value={color}
+                                        onChange={(e) => setColor(e.target.value)}
+                                        disabled={!(users[myindex].presenter)}
+                                    />
+                                </div>
+                            </div>
+                            <div className="col-md-3 d-flex gap-2">
+                                <button className="btn btn-primary mt-1"
+                                    disabled={elements.length === 0 || !(users[myindex].presenter)}
+                                    onClick={() => undo()}
+                                    style={{ marginLeft: "60px", fontWeight: "bold" }}
+                                >Undo</button>
+                                <button className="btn btn-outline-primary mt-1"
+                                    disabled={history.length < 1 || !(users[myindex].presenter)}
+                                    onClick={() => redo()}
+                                    style={{ fontWeight: "bold" }}
+                                >Redo</button>
+                            </div>
+                            <div className="col-md-2">
+                                <button className="btn btn-danger" onClick={handleClearCanvas} disabled={!(users[myindex].presenter)} style={{ fontWeight: "bold" }}>Clear Canvas</button>
                             </div>
                         </div>
-                    </div>
-                    <div className="d-flex gap-1">
-                        <label htmlFor="eraser" style={{ marginLeft: "20px", fontWeight: "bold", fontSize: "16px" }}>Eraser</label>
-                        <input
-                            type="radio"
-                            name="tool"
-                            id="eraser"
-                            value="eraser"
-                            checked={tool === "eraser"}
-                            className="mt-1"
-                            onChange={(e) => setTool(e.target.value)}
-                            disabled={!user?.presenter}
+                    }
+
+                    <div className="col-md-12 mx-auto canvas-box "  >
+                        <Whiteboard
+                            canvasRef={canvasRef}
+                            ctxRef={ctxRef}
+                            elements={elements}
+                            setElements={setElements}
+                            color={color}
+                            tool={tool}
+                            user={users[myindex]}
+                            socket={socket}
+                            thickness={thickness}
+                            setThickness={setThickness}
                         />
                     </div>
+                    <div style={{ position: 'absolute', color: 'white', right: '1vw', top: '27vh', border: '1px solid white', borderRadius: '10px', backgroundColor: 'black', width: '15vw', minHeight: 'fit-content', padding: '1vh 1vw' }}>
+                        <div style={{ textAlign: 'center', fontSize: '2vw' }}>Scoreboard</div>
+                        {users.map((user, index) => (
+                            <div key={index} className="d-flex align-items-center justify-content-between" style={{ fontSize: '1.2vw' }}>
+                                <div>{user.name}<span style={{ color: 'red' }}>{user.presenter ? "◀" : ""}</span></div>
+                                <div>{user.score + scores[index]}</div>
+                            </div>
+                        ))}
+                    </div>
+                    {!users[myindex].presenter && <div style={{ position: 'absolute', color: 'white', right: '1vw', bottom: '10vh', border: '1px solid white', borderRadius: '10px', backgroundColor: 'black', width: '15vw', minHeight: 'fit-content', padding: '1vh 1vw' }}>
+                        <div style={{ textAlign: 'center', fontSize: '2vw' }}>Guess</div>
+                        <div className="d-flex flex-column align-items-center justify-content-between" style={{ fontSize: '1.2vw' }}>
+                            <input disabled={draw == "" && attempts !== 0} className="form-control" type="text" value={guess} onChange={(e) => { setguess(e.target.value) }} />
+                            <button disabled={draw == "" && attempts !== 0} className="btn btn-secondary mt-2" onClick={guessedword}>Submit</button>
+                        </div>
+                    </div>}
+                    {users[myindex].presenter && <div style={{ position: 'absolute', color: 'white', right: '1vw', bottom: '10vh', border: '1px solid white', borderRadius: '10px', backgroundColor: 'black', width: '15vw', minHeight: 'fit-content', padding: '1vh 1vw' }}>
+                        <div style={{ textAlign: 'center', fontSize: '2vh' }}>What are you drawing?</div>
+                        <div className="d-flex flex-column align-items-center justify-content-between" style={{ fontSize: '1.2vw' }}>
+                            <input className="form-control" type="text" value={draw} onChange={(e) => { setdraw(e.target.value) }} />
+                            <button className="btn btn-secondary mt-2" onClick={handleguesssubmit}>Submit</button>
+                        </div>
+                    </div>}
+                    {countdown > 0 && <div className="d-flex align-items-center justify-content-center" style={{ height: '100vh', width: '100vw', fontSize: 'calc(5vh + 5vw + 10px)', position: 'absolute', zIndex: '10', color: 'grey' }}>
+                        <span>
+                            {countdown}
+                        </span>
+                    </div>}
+                </div> : (
+                    <div style={{ height: '100vh' }}>
+                        <div className="d-flex flex-column justify-content-center align-items-center" style={{ width: '100vw', position: 'absolute', top: '20vh', color: 'white' }}>
+                            <div style={{ width: '7vh', height: '7vh' }} className="spinner-border" role="status">
+                                <span className="sr-only"></span>
+                            </div>
+                            <div style={{ fontSize: '4vh' }}>Waiting for other players to join...</div>
+                        </div>
 
-                    <div className="whiteboard-container">
-                        {/* Thickness adjuster */}
-                        <div className="thickness-slider">
-                            <label htmlFor="thickness" style={{ fontWeight: "bold", fontSize: "16px" }}>Thickness:</label>
-                            <input
-                                type="range"
-                                id="thickness"
-                                min="1"
-                                max="20"
-                                value={thickness}
-                                onChange={(e) => handleThicknessChange(parseInt(e.target.value))}
-                                style={{
-                                    background: `linear-gradient(to right, ${color}, ${color} ${((thickness - 1) / 19) * 100}%, #d3d3d3 ${(thickness / 20) * 100}%, #d3d3d3)`,
-                                }}
-                            />
-                            <span>{thickness}</span>
+                        <div className="d-flex align-items-center justify-content-center" style={{ position: 'absolute', top: '60vh', width: '100vw' }}>
+                            {users.length > 0 && users.map((user, index) => (
+                                <div
+                                    className="d-flex flex-column justify-content-center align-items-center"
+                                    style={{ height: "20vh", width: '10vw' }}
+                                    key={index}
+                                >
+                                    <img
+                                        src={require(`../../avatar/${user.image}`)}
+                                        alt="Avatar"
+                                        style={{ height: "10vh", width: "10vh" }}
+                                    />
+                                    <strong
+                                        style={{ textAlign: "center" }}
+                                    >
+                                        {user.name}
+                                    </strong>
+                                </div>
+                            ))}
+
                         </div>
                     </div>
-
-                    <div className="col-md-2 mx-auto">
-                        <div className="d-flex align-items-center ">
-                            <label htmlFor="color" style={{ fontWeight: "bold", fontSize: "16px" }}>Select Color: </label>
-                            <input
-                                type="color"
-                                id="color"
-                                className="mt-1 ms-2"
-                                value={color}
-                                onChange={(e) => setColor(e.target.value)}
-                                disabled={!user?.presenter}
-                            />
-                        </div>
-                    </div>
-                    <div className="col-md-3 d-flex gap-2">
-                        <button className="btn btn-primary mt-1"
-                            disabled={elements.length === 0 || !user?.presenter}
-                            onClick={() => undo()}
-                            style={{ marginLeft: "60px", fontWeight: "bold" }}
-                        >Undo</button>
-                        <button className="btn btn-outline-primary mt-1"
-                            disabled={history.length < 1 || !user?.presenter}
-                            onClick={() => redo()}
-                            style={{ fontWeight: "bold" }}
-                        >Redo</button>
-                    </div>
-                    <div className="col-md-2">
-                        <button className="btn btn-danger" onClick={handleClearCanvas} disabled={!user?.presenter} style={{ fontWeight: "bold" }}>Clear Canvas</button>
-                    </div>
-                </div>
-            }
-
-            <div className="col-md-12 mx-auto mt-5 canvas-box "  >
-                <Whiteboard
-                    canvasRef={canvasRef}
-                    ctxRef={ctxRef}
-                    elements={elements}
-                    setElements={setElements}
-                    color={color}
-                    tool={tool}
-                    user={user}
-                    socket={socket}
-                    thickness={thickness}
-                    setThickness={setThickness}
-                />
-            </div>
-        </div>
+                )}
+        </>
     )
 }
 
