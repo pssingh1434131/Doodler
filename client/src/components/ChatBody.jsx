@@ -1,68 +1,82 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from "react-router-dom";
 import moment from 'moment';
-import io from "socket.io-client";
 import "../Chat.css"
-let socket = io.connect("http://localhost:3001");
 
-function ChatBody(props) {
+function ChatBody({ socket }) {
     const user = JSON.parse(localStorage.getItem('user'));
     const [friends, setfriends] = useState([]);
     const [msgs, setmsgs] = useState([]);
-    const [selectedchat, changeselectedchat] = useState(null);
+    const [selectedchat, changeselectedchat] = useState('');
+    const [prselectedchat, changeprselectedchat] = useState('');
     const [slnum, setslnum] = useState(-1);
     const [text, settext] = useState("");
+    const chatContainerRef = useRef(null);
 
     useEffect(() => {
         socket.emit("joinchatroom", user.username);
-        return () => {
-            // socket.disconnect();
-        };
-    }, [user.username]);
-    
-    useEffect(()=>{
         socket.on('getfriendlist', (data) => {
-            if(data.length>0) {
+            if (data.length > 0) {
                 setfriends(data);
                 socket.emit('getmessages', data[0], (response) => {
                     if (response.data.length > 0) setmsgs(response.data);
                 })
-                changeselectedchat(data[0]);
+                changeprselectedchat(selectedchat);
+                if (data[0].person1 === user.username) changeselectedchat(data[0].person2);
+                else changeselectedchat(data[0].person1);
                 setslnum(0);
             }
         })
-    },[]);
-
-    useEffect(() => {
-        socket.on('recievemsg', (data) => {
-            if (selectedchat !== null) {
-                const targetUsername = user.username === selectedchat.person1 ? selectedchat.person2 : selectedchat.person1;
-                if (data.from === targetUsername) {
-                    setmsgs([...msgs, data]);
-                }
-            }
-        });
         return () => {
             // socket.disconnect();
+            socket.emit('join', user.username);
         };
-    }, [msgs, selectedchat, user.username]);
+    }, []);
 
     useEffect(() => {
-        if (slnum !== -1) {
-          setmsgs([]);
-          socket.emit('getmessages', selectedchat, (response) => {
-            if (response.success && response.data.length > 0) {
-              setmsgs(response.data);
-            }
-          });
+        // Scroll to the bottom whenever msgs state changes
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
         }
-      }, [slnum, selectedchat]);
-    
-      const selectchat = (index, data) => {
+    }, [msgs]);
+
+    useEffect(() => {
+        if (prselectedchat !== '') {
+            let array = [user.username, prselectedchat];
+            array.sort();
+            let roomId = array.join('&');
+            socket.emit('leaveroom', roomId);
+        }
+        let array = [user.username, selectedchat];
+        array.sort();
+        let roomId = array.join('&');
+        socket.emit('joinchatroom2', { roomId: roomId, array: array }, (response) => {
+            if (response.success && response.data.length > 0) {
+                setmsgs(response.data);
+            }
+        })
+    }, [slnum, selectedchat, prselectedchat]);
+
+    useEffect(() => {
+        const handleReceiveMsg = (data) => {
+            setmsgs((prevMsgs) => [...prevMsgs, data]);
+        };
+
+        socket.on('recievemsg', handleReceiveMsg);
+
+        return () => {
+            socket.off('recievemsg', handleReceiveMsg); // Clean up the event listener
+        };
+    }, [socket]);
+
+
+    const selectchat = (index, data) => {
+        changeprselectedchat(selectedchat);
         setslnum(index);
-        changeselectedchat(data);
-      };
-    
+        if (data.person1 === user.username) changeselectedchat(data.person2);
+        else changeselectedchat(data.person1);
+    };
+
 
     const handletextchange = (event) => {
         settext(event.target.value);
@@ -73,14 +87,17 @@ function ChatBody(props) {
         e.preventDefault();
         const msg1 = {
             from: user.username,
-            to: selectedchat.person1 === user.username ? selectedchat.person2 : selectedchat.person1,
+            to: selectedchat,
             msg: text,
             date: Date.now()
         }
         settext('');
-        socket.emit('sendmessage', { msg1 }, (response) => {
-            if(response.success) {
-                setmsgs([...msgs, msg1]);
+        let array = [user.username, selectedchat];
+        array.sort();
+        let roomId = array.join('&');
+        socket.emit('sendmessage', { msg1: msg1, roomId: roomId }, (response) => {
+            if (response.success) {
+                // setmsgs([...msgs, msg1]);
             }
         })
     };
@@ -88,8 +105,8 @@ function ChatBody(props) {
 
     return (
         <div className='d-flex flex-column' style={{ width: '100vw', padding: '0 10vw' }}>
-            <Link to="/home" style={{width:'0px',minWidth:'fit-content'}} ><button className='btn btn-secondary' style={{ width: '8vw', margin: '3vh 0px' }} > &laquo; BACK</button></Link>
-            <div className="chat" >
+            <Link to="/home" style={{ width: '0px', minWidth: 'fit-content' }} ><button className='btn btn-secondary' style={{ width: '8vw', margin: '3vh 0px' }} > &laquo; BACK</button></Link>
+            <div className="chat">
                 <div id="sidebar" className="chat__sidebar" style={{ borderTopLeftRadius: '30px', borderBottomLeftRadius: '30px' }}>
                     <div style={{ fontSize: 'calc(1vh + 1vw + 10px)', padding: '1vh 2vw' }}>FRIENDS</div>
                     <ul className="users">
@@ -99,13 +116,13 @@ function ChatBody(props) {
                     </ul>
                 </div>
                 <div className="chat__main" style={{ borderBottomRightRadius: '30px' }}>
-                    <div id="messages" className="chat__messages">
+                    <div id="messages" className="chat__messages" ref={chatContainerRef}>
                         {Array.isArray(msgs) ? (
                             msgs.map((data, index) => (
-                                <div key={index} className='d-flex' style={{justifyContent: user.username===data.from? 'flex-end':'flex-start'}}>
-                                    <div className="message" key={index} style={{ padding:'0px 20px 0px 10px',minWidth: 'fit-content', width: '10vw', position: 'relative' }}>
+                                <div key={index} className='d-flex' style={{ justifyContent: user.username === data.from ? 'flex-end' : 'flex-start' }}>
+                                    <div className="message" key={index} style={{ padding: '0px 20px 0px 10px', minWidth: 'fit-content', width: '10vw', position: 'relative' }}>
                                         <p style={{ margin: '0px' }}>
-                                            <span className="message__name">{data.from===user.username?'You':data.from}</span>
+                                            <span className="message__name">{data.from === user.username ? 'You' : data.from}</span>
                                             <span className="message__meta">
                                                 {moment(data.date).format('DD/MM/YYYY h:mm a')}
                                             </span>
@@ -116,7 +133,7 @@ function ChatBody(props) {
 
                             ))
                         ) : (
-                            <p style={{color:'white', textAlign:'center', fontSize:'16px'}}>Loading messages...</p>
+                            <p style={{ color: 'white', textAlign: 'center', fontSize: '16px' }}>Loading messages...</p>
                         )}
                     </div>
 

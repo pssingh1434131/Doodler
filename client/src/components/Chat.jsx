@@ -3,7 +3,7 @@ import Navbar from './Navbar'
 import ChatBody from './ChatBody'
 import updateStatus from '../services/setStatus';
 
-function Chat() {
+function Chat(props) {
   useEffect(() => {
     updateStatus('online');
 
@@ -24,7 +24,7 @@ function Chat() {
     <div className='d-flex justify-content-center align-item-center flex-column' style={{height:'99vh'}}>
       <Navbar chat={false}/>
       <div className='d-flex justify-content-center'>
-        <ChatBody user={user} />
+        <ChatBody user={user} socket = {props.socket} />
       </div>
     </div>
   )

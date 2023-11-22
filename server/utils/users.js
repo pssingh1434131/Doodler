@@ -3,9 +3,16 @@ const users = [];
 // Join user to chat
 
 const addUser = ({name, userId, roomId, host, presenter, socketId}) => {
+  let boolean = false;
+  users.forEach(element => {
+    if(element.name===name) {
+      boolean = true;
+    }
+  });
+  if(boolean) return users.filter((user)=>user.roomId===roomId);
   const user = {name, userId, roomId, host, presenter, socketId};
   users.push(user);
-  return users.filter((user)=>user.roomId===roomId);;
+  return users.filter((user)=>user.roomId===roomId);
 };
 
 // User leaves chat

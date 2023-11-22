@@ -9,6 +9,7 @@ const { Server } = require('socket.io');
 const {getFriends, sendFriendRequest, receiveFriendRequest, deleteFriendRequest, acceptFriendreq, deleteFriendship} = require('./controller/friendControl');
 const { addUser, getUser, removeUser } = require("./utils/users");
 const { getmessages, sendmessages } = require('./controller/chatControl');
+const { getuserbyusername } = require('./controller/user');
 
 
 const app = express();
@@ -56,7 +57,30 @@ app.use('/friend', friendRouter);
 
 let userRoom,imgUrl;
 
+let users = [];
+
+const createobj = (user) => {
+  return {
+    player1: user,
+    player2: '',
+    roomId: '',
+    vacant: true
+  }
+}
+
+const getroomid = (username1,username2) => {
+  let array = [username1,username2];
+  array.sort();
+  return array.join('&');
+}
+
+
 io.on('connection', (socket) => {
+
+  socket.on('join', (username) => {
+    socket.join(username);
+  })
+
   socket.on("join_room", async (username) => {
     socket.join(username);
     let datat = await receiveFriendRequest(username);
@@ -120,17 +144,60 @@ io.on('connection', (socket) => {
     else callback({success:false,msg:'error in accepting the request',friends: null});
   })
 
+  socket.on('updatestatus',async (data) => {
+    const userd = await getuserbyusername(data.user.username);
+    const userdata = userd.user;
+    let flag = true;
+    for(let i=0;i<users.length;i++){
+      if(users[i].vacant && userdata.username===users[i].player1.username) {
+        flag = false;
+        // console.log('inside same');
+        continue;
+      }
+      if(users[i].vacant) {
+        flag = false;
+        // console.log('different')
+        // console.log(users[i]);
+        // console.log(userdata);
+        let newobj = users[i];
+        users.splice(i, 1);
+        newobj.player2 = userdata;
+        newobj.vacant = false;
+        newobj.roomId = getroomid(newobj.player1.username,newobj.player2.username);
+        io.to(newobj.player1.username).emit('reqforjoinroom',newobj);
+        io.to(newobj.player2.username).emit('reqforjoinroom',newobj);
+        // console.log(newobj);
+        break;
+      }
+    }
+    if(flag) {
+      let obj = createobj(userdata);
+      users.push(obj);
+    }
+  })
+
+  socket.on('deleteroom',(data) => {
+    for(let i=0;i<users.length;i++){
+      if(users[i].player1.username===data.username) {
+        users.splice(i, 1);
+        break;
+      }
+    }
+  })
+
+
   socket.on("userJoined", (data) => {
     const { name, userId, roomId, host, presenter} = data;
     userRoom = roomId;
     socket.join(roomId);
     
     const users = addUser({ name, userId, roomId, host, presenter, socketId:socket.id });
+    // console.log(users);
 
     socket.emit("userIsJoined", { success: true, users });
     socket.broadcast.to(userRoom).emit("userJoinedMessageBroadcasted", name)
 
-    socket.broadcast.to(userRoom).emit("allUsers", users)
+    socket.broadcast.to(userRoom).emit("allUsers", users)   
 
     //console.log("imgUrl-> joined")
     socket.broadcast.to(userRoom).emit("whiteBoardDataResponse", {
@@ -153,6 +220,10 @@ socket.on("whiteboardData", (data) => {
       socket.broadcast.to(userRoom).emit("messageResponse", {filteredword, name: user.name})
     }
     
+  })
+  
+  socket.on('changemousemove',({ x, y, userName }) => {
+    socket.broadcast.to(userRoom).emit("mouseMove", { x, y, userName })
   })
 
 
@@ -182,8 +253,9 @@ socket.on("whiteboardData", (data) => {
     else io.to(username).emit('getfriendlist', []);
   });
 
-  socket.on('getmessages', async (options, callback) => {
-    const datat = await getmessages(options.person1, options.person2);
+  socket.on('joinchatroom2', async ({roomId,array}, callback) => {
+    socket.join(roomId);
+    const datat = await getmessages(array[0], array[1]);
     const data = datat.data;
     if(datat.success) callback({ data: data, success: true });
     else callback({ data: [], success: false });
@@ -193,9 +265,12 @@ socket.on("whiteboardData", (data) => {
     const datat = await sendmessages(options.msg1.to, options.msg1.from, options.msg1);
     const data = datat.data;
     if(datat.success) {
-      io.to(options.msg1.to).emit('recievemsg', data);
+      io.to(options.roomId).emit('recievemsg', data);
       callback({ data: data, success: true });
     }
     else callback({ data: null, success: false });
+  })
+  socket.on('leaveroom',(roomId)=>{
+    socket.leave(roomId);
   })
 });

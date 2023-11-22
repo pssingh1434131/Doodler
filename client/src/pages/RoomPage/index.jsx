@@ -201,7 +201,7 @@ const RoomPage = ({ socket, users }) => {
                                 {
                                     users.map((usr, index) => (
                                         <p key={index * 999} className="my-2  text-center w-100" style={{ border: '1px solid white', borderRadius: '5px', padding: '1px 0px' }}>
-                                            {usr.name} {user && user.userId === usr.userId && "(You)"}
+                                            {usr.name} {user && user.name === usr.name && "(You)"}
                                         </p>
                                     ))
                                 }

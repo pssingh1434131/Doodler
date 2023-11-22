@@ -15,6 +15,24 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   const [isErasing, setIsErasing] = useState(false);
   
 
+  useEffect(() => {
+    console.log('...');
+  }, [showname]);
+
+  useEffect(() => {
+    let username = !broadcastname?"":user.name;
+    socket.emit('changemousemove',{ x: mousePointer.x, y: mousePointer.y, userName: username });
+  }, [broadcastname]);
+
+
+  const changeshownameforuser = () => {
+    changeshowname(!showname);
+  }
+
+  const changeshownameforalluser = () => {
+    changebroadcast(!broadcastname);
+  }
+
   const drawElements = useCallback(() => {
     if (!canvasRef.current || !ctxRef.current) {
       return;
@@ -138,10 +156,15 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
       roughness: 1,
     });
 
-    if (showname && mousePointer.userName !== "") {
+    if (showname) {
       ctxRef.current.fillStyle = color;
       ctxRef.current.font = "12px Arial";
       ctxRef.current.fillText(mousePointer.userName, mousePointer.x, mousePointer.y + 10);
+    }
+    else {
+      ctxRef.current.fillStyle = color;
+      ctxRef.current.font = "12px Arial";
+      ctxRef.current.fillText('', mousePointer.x, mousePointer.y + 10);
     }
   }, [canvasRef, ctxRef, elements, color, mousePointer.x, mousePointer.y, mousePointer.userName, showname, thickness]);
  
@@ -152,10 +175,19 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   }, [socket, canvasRef]);
 
   useEffect(() => {
-    socket.on("mouseMove", ({ x, y, userName }) => {
-      setMousePointer({ x, y, userName });
+    socket.on("mouseMove", (data) => {
+      // console.log(data);
+      setMousePointer(data);
     });
   }, [socket]);
+
+  useEffect(() => {
+    console.log(mousePointer);
+    if(!ctxRef || !ctxRef.current) return;
+    ctxRef.current.fillStyle = color;
+    ctxRef.current.font = "12px Arial";
+    ctxRef.current.fillText(mousePointer.userName, mousePointer.x, mousePointer.y + 10);
+  }, [mousePointer]);
 
   useEffect(() => {
     if (!canvasRef || !canvasRef.current) {
@@ -436,7 +468,10 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
         eraserSize
       );
     }
-    socket.emit("mouseMove", { x: offsetX, y: offsetY, userName: user.name });
+    let susername = showname?user.name:"";
+    let busername = broadcastname?user.name:"";
+    socket.emit("changemousemove", { x: offsetX, y: offsetY, userName: busername });
+    setMousePointer({ x: offsetX, y: offsetY, userName: susername });
   };
 
   const handleMouseUp = () => {
@@ -444,6 +479,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     setIsErasing(false);
 
   };
+
 
   if (!user?.presenter) {
     return (
@@ -471,9 +507,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
           type="checkbox"
           role="switch"
           id="flexSwitchCheckDefault"
-          onClick={() => {
-            changeshowname(!showname);
-          }}
+          onClick={changeshownameforuser}
         />
         <label className="form-check-label" htmlFor="flexSwitchCheckDefault">
           {showname === true ? "Don't show name with mouse pointer" : "Show name with mouse pointer"}
@@ -485,9 +519,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
           type="checkbox"
           role="switch"
           id="flexSwitchCheckDefault"
-          onClick={() => {
-            changebroadcast(!broadcastname);
-          }}
+          onClick={changeshownameforalluser}
         />
         <label className="form-check-label" htmlFor="flexSwitchCheckDefault">
           {broadcastname === true ? "Don't broadcast your name" : "Broadcast your name"}

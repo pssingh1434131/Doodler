@@ -110,14 +110,13 @@ module.exports.getuser = async(req, res)=>{
     }
 }
 
-module.exports.getuserbyusername = async(req, res)=>{
+module.exports.getuserbyusername = async(username)=>{
     try{
-        const username = req.params.username;
         const user = await userModel.findOne({username:username});
-        return res.json({ success: true,user:user});
+        return { success: true,user:user};
     }
     catch(err){
-        return res.status(400).json({success: false});
+        return {success: false,user:null};
     }
 }
 

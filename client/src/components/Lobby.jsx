@@ -6,77 +6,63 @@ function Lobby({ socket }) {
   const user = JSON.parse(localStorage.getItem('user'));
   const [randomplayer, setplayer] = useState(null);
   const navigate = useNavigate();
+  let timet = null;
   useEffect(() => {
+    socket.emit('join', user.username);
+
+    socket.emit('updatestatus', { status: 'lobby', user: user });
     updateStatus('lobby');
 
     const handleBeforeUnload = () => {
       updateStatus('offline');
     };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     // Fetch random player with a timeout of 1 minute
-    const fetchRandomPlayerWithTimeout = async () => {
-      const timeoutId = setTimeout(() => {
-        alert("No user found");
-        clearTimeout(timeoutId);
-        navigate('/home');
-      }, 60000);
-
-      try {
-        while (timeoutId) {
-          const response = await fetch('http://localhost:3001/user/getlobbyusers', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-          });
-          let datat = await response.json();
-          const data = datat.lobbyuser;
-          if (Array.isArray(data) && data.length > 1) {
-            const players = data.filter((users) => users.username !== user.username);
-            const randomIndex = Math.floor(Math.random() * players.length);
-            let randomPlayer = players[randomIndex];
-            let resp = await fetch(`http://localhost:3001/user/getuserbyusername/${randomPlayer.username}`, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              credentials: 'include',
-            });
-            datat = await resp.json();
-            randomPlayer = datat.user;
-            setplayer(randomPlayer);
-            clearTimeout(timeoutId);
-            let array = [randomPlayer.username, user.username];
-            array.sort();
-            const uuid = array.join('&');
-            const roomData = {
-              name:user.username,
-              roomId:uuid,
-              userId: user.id,
-              host: false,
-              presenter: true,
-              };
-              console.log(roomData);
-              localStorage.setItem('roomdata', JSON.stringify(roomData));
-              navigate(`/${uuid}`);
-              socket.emit("userJoined", roomData);
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching player:', error);
-      }
-    };
-
-    fetchRandomPlayerWithTimeout();
+    timet = setTimeout(() => {
+      alert("No user found");
+      clearTimeout(timet);
+      socket.emit('deleteroom', user);
+      navigate('/home');
+    }, 60000);
 
     return () => {
       updateStatus('offline');
+      socket.emit('deleteroom', user);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (timet) clearTimeout(timet);
     };
-  }, [socket, user, navigate]);
+  }, []);
+
+  // useEffect(() => {
+
+  // },[socket])
+
+  let randomPlayer = null;
+  socket.on('reqforjoinroom', (data) => {
+    if (timet) clearTimeout(timet);
+    console.log('yes');
+    let str = data.roomId;
+    const tokens = str.split('&');
+    let roomData = {
+      name: user.username,
+      roomId: str,
+      userId: user._id,
+      host: false,
+      presenter: true,
+    };
+    randomPlayer = data.player1.username === user.username ? data.player2 : data.player1;
+    setplayer(randomPlayer)
+    if (tokens[0] === user.name) {
+      roomData.presenter = true;
+    }
+    else {
+      roomData.presenter = false;
+    }
+    localStorage.setItem('roomdata', JSON.stringify(roomData));
+    socket.emit("userJoined", roomData);
+    navigate(`/${str}`);
+  })
 
   return (
     <div className="d-flex align-items-center justify-content-around" style={{ height: '100vh', color: 'white' }}>

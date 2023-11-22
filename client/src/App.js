@@ -111,7 +111,7 @@ function App() {
           <Route
             exact
             path="/chat"
-            element={<PrivateRoute element={<Chat />} />}
+            element={<PrivateRoute element={<Chat socket = {socket} />} />}
           />
           <Route exact
             path="/play"
