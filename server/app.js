@@ -186,7 +186,6 @@ io.on('connection', (socket) => {
   })
 
   socket.on("userJoined", ({ roomData, numberofplayer }) => {
-    console.log(roomData);
     const { name, userId, image, roomId, host, presenter, score } = roomData;
     if (numberofplayer) {
       numberofplayers = numberofplayer;
