@@ -18,8 +18,18 @@ module.exports.getHistory = async (req, res)=>{
 module.exports.uploadGame = async (req, res)=>{
     try{
         let {winner, loser} = req.body;
-        const game = gameModel.create({winner, loser});
+        const game = await gameModel.create({winner, loser});
         return res.json({success: true});
+    }
+    catch(err){
+        return res.status(400).json({success: false});
+    }
+}
+
+module.exports.uploadgame = async(data)=>{
+    try{
+        const game = await gameModel.create(data);
+        return game;
     }
     catch(err){
         return res.status(400).json({success: false});

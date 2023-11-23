@@ -1,4 +1,3 @@
-const  express = require('express');
 const userModel = require('../model/userModel');
 const onlineUsers = require('../model/onlineUsers');
 const jwt = require('jsonwebtoken');
@@ -36,8 +35,10 @@ module.exports.login = async(req, res)=>{
             return res.status(400).json({ success:false});
         }
         const uid = user['_id'];
-        const authtoken = jwt.sign({payload: uid}, jwt_key);
-        res.cookie('isloggedin',authtoken,{httpOnly:true});
+        const authtoken = jwt.sign({ payload: uid }, jwt_key, {
+            expiresIn: '30d',
+          });
+          res.cookie('isloggedin', authtoken, { maxAge: 30 * 24 * 60 * 60 * 1000, httpOnly: true });
         var userstatus = await onlineUsers.findOne({username:user.username})
         if(!userstatus)
         {

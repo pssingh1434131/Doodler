@@ -16,16 +16,16 @@ const CreateRoomForm = ({ uuid, socket, user, numberofplayer, setplayercount }) 
         e.preventDefault();
         if (!name) return toast.dark("Please enter your name!");
         if (numberofplayer > 5 || numberofplayer < 2) {
-            setplayercount("");
+            setplayercount(2);
             alert("Number of players should be between 2 and 5");
             return;
         }
-
+        setplayercount(parseInt(numberofplayer, 10));
         const roomData = {
             name,
             roomId,
             image: user.image,
-            userId: uuid(),
+            userId: user.username,
             host: true,
             presenter: false,
             score:0

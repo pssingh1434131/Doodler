@@ -19,7 +19,7 @@ const JoinRoomForm = ({ uuid, socket, user, setuser}) =>{
         name,
         roomId,
         image:user.image,
-        userId: uuid(),
+        userId: user.username,
         host: false,
         presenter: false,
         score:0

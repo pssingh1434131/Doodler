@@ -9,6 +9,7 @@ const { Server } = require('socket.io');
 const { getFriends, sendFriendRequest, receiveFriendRequest, deleteFriendRequest, acceptFriendreq, deleteFriendship } = require('./controller/friendControl');
 const { addUser, getUser, removeUser } = require("./utils/users");
 const { getmessages, sendmessages } = require('./controller/chatControl');
+const {uploadgame} = require("./controller/gamehistory")
 const { getuserbyusername } = require('./controller/user');
 
 
@@ -57,7 +58,7 @@ app.use('/friend', friendRouter);
 
 let userRoom, imgUrl, numberofplayers = 0;
 let scores = [0, 0, 0, 0, 0];
-
+let requestcnt = 0;
 let users = [];
 
 const createobj = (user) => {
@@ -195,15 +196,15 @@ io.on('connection', (socket) => {
     socket.join(roomId);
 
     const users = addUser({ name, userId, image, roomId, host, presenter, socketId: socket.id, score });
-
     if (numberofplayers === users.length) {
       users[0].presenter = true;
     }
     if (!numberofplayer) {
-      socket.emit("userIsJoined", { success: true, users, numberofplayers });
+      numberofplayers = parseInt(numberofplayers, 10);
+      io.to(userRoom).emit("userIsJoined", { success: true, users, numberofplayers });
     }
     if (numberofplayer) {
-      socket.emit("userIsJoined", { success: true, users });
+      io.to(userRoom).emit("userIsJoined", { success: true, users });
     }
     socket.broadcast.to(userRoom).emit("userJoinedMessageBroadcasted", name)
 
@@ -299,12 +300,26 @@ io.on('connection', (socket) => {
       data[(ind + 1) % len].presenter = true;
       scores.fill(0);
       io.to(userRoom).emit("updatedusersarray", data);
-    }, 60000);
+    }, 10000);
   })
 
   socket.on('takescore', (score) => {
     for (let i = 0; i < score.length; i++) {
-      scores[i] = score[i];
+      scores[i] += score[i];
+    }
+  })
+
+  socket.on("blockuser", (name)=>{
+    io.to(userRoom).emit("blockuserchat", name);
+  })
+
+  socket.on("handlegamesave", async(data)=>{
+    ++requestcnt;
+    if(requestcnt===2){
+      const game = await uploadgame(data);
+      requestcnt=0;
+      io.to(data.winner).emit("newgame", game);
+      io.to(data.loser).emit("newgame", game);
     }
   })
 });

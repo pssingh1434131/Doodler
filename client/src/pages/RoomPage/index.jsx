@@ -10,7 +10,7 @@ import updateStatus from "../../services/setStatus";
 import { toast } from "react-toastify";
 import Result from "../../components/Result"
 
-const RoomPage = ({ users, setUsers, socket, round, setround, numberofplayer }) => {
+const RoomPage = ({socket, round, setround, numberofplayer, users, setUsers, myindex, blocked, setblocked }) => {
     const user = JSON.parse(localStorage.getItem('user'));
     const canvasRef = useRef(null);
     const ctxRef = useRef(null);
@@ -25,7 +25,6 @@ const RoomPage = ({ users, setUsers, socket, round, setround, numberofplayer }) 
     const [thickness, setThickness] = useState(5);
     const [guess, setguess] = useState("");
     const [draw, setdraw] = useState("");
-    const [myindex, setIndex] = useState(1);
     const [countdown, setCountdown] = useState(5);
     const [attempts, setattempts] = useState(3);
     const [scores, setscore] = useState(Array.from({ length: numberofplayer }, () => 0));
@@ -42,16 +41,8 @@ const RoomPage = ({ users, setUsers, socket, round, setround, numberofplayer }) 
 
     useEffect(() => {
         if (countdown == 0) {
-            let ind = -1;
-            for (let i = 0; i < users.length; i++) {
-                if (users[i].name === user.username) {
-                    setIndex(i);
-                    ind = i;
-                    break;
-                }
-            }
-            if (users[ind].presenter&&round<=3) {
-                socket.emit("updateuserarray", { ind: ind, data: users});
+            if (users[myindex].presenter && round <= 3) {
+                socket.emit("updateuserarray", { ind: myindex, data: users });
             }
         }
     }, [countdown])
@@ -206,7 +197,7 @@ const RoomPage = ({ users, setUsers, socket, round, setround, numberofplayer }) 
 
     if (round === 4) {
         return (<div className="d-flex justify-content-center align-items-center" style={{ height: '100vh', width: '100vw' }}>
-            <Result users={users} myindex={myindex} />
+            <Result users={users} myindex={myindex} socket={socket}/>
         </div>)
     }
 
@@ -215,15 +206,16 @@ const RoomPage = ({ users, setUsers, socket, round, setround, numberofplayer }) 
             {users.length === numberofplayer ?
                 <div className="row" style={{ height: '100vh' }}>
                     <div className="d-flex justify-content-between align-items-center">
-                        <Link to="/home" style={{ margin: '0px 2vw' }} >
+                        <Link to="/home" style={{ margin: '0px 2vw', Width:'10vw', minHeight:'fit-content', display:'block',zIndex:1 }} >
                             <button
                                 type="button"
                                 className="btn btn-secondary"
-                                style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content', zIndex: 1 }}
+                                style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content'}}
                                 onClick={() => handleDisconnect()}
                             >
                                 &laquo; BACK
-                            </button></Link>
+                            </button>
+                        </Link>
                         <div className="d-flex align-items-center justify-content-start" style={{ width: '70vw' }}>
                             <button
                                 type="button"
@@ -260,7 +252,7 @@ const RoomPage = ({ users, setUsers, socket, round, setround, numberofplayer }) 
                         openedUserTab && (
                             <div
                                 className="position-fixed top-0 h-100 text-white bg-dark"
-                                style={{ width: "15vw", left: "0%", zIndex: 2, background: "white" }}>
+                                style={{ width: "18vw", left: "0%", zIndex: 2, background: "white", minWidth: 'fit-content' }}>
                                 <button
                                     type="button"
                                     onClick={() => setOpenedUserTab(false)}
@@ -269,12 +261,12 @@ const RoomPage = ({ users, setUsers, socket, round, setround, numberofplayer }) 
                                     Close
                                 </button>
                                 {
-                                    <div className="w-100 mt-5 pt-5">
+                                    <div className="w-100 mt-5 pt-5" style={{ minWidth: 'fit-content' }}>
                                         {
                                             users.map((usr, index) => (
-                                                <p key={index * 999} className="my-2  text-center w-100" style={{ border: '1px solid white', borderRadius: '5px', padding: '1px 0px' }}>
-                                                    {usr.name} {users[myindex].userId === usr.userId && "(You)"}
-                                                </p>
+                                                <div key={index * 999} className="my-3  text-center w-100 d-flex justify-content-between align-items-center" style={{ border: '1px solid white', borderRadius: '5px', padding: '1px 0px', height: '35px', minWidth: 'fit-content' }}>
+                                                    <div style={{ margin: '0px 5px' }}>{usr.name} {users[myindex].userId === usr.userId && "(You)"}</div> {users[myindex].host && <div style={{ fontSize: '13px', display: index !== myindex ? 'block' : 'none' }}><button style={{ background: 'none', borderRadius: '3px', cursor: 'pointer', color: 'white', margin: '4px' }} onClick={() => { socket.emit("blockuser", usr.name) }}>Block chat</button><button style={{ background: 'none', borderRadius: '3px', cursor: 'pointer', color: 'white', margin: '4px' }}>Kick</button></div>}
+                                                </div>
                                             ))
                                         }
                                     </div>
@@ -284,7 +276,7 @@ const RoomPage = ({ users, setUsers, socket, round, setround, numberofplayer }) 
                     }
                     {
                         openedChatTab && (
-                            <Chat setOpenedChatTab={setOpenedChatTab} socket={socket} chat={chat} setChat={setChat} />
+                            <Chat setOpenedChatTab={setOpenedChatTab} socket={socket} chat={chat} setChat={setChat} user={users[myindex]} blocked={blocked} setblocked={setblocked} />
                         )
                     }
                     {

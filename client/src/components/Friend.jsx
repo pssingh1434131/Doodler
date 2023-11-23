@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import io from "socket.io-client";
 let socket = io.connect("http://localhost:3001");
 
-function Friend(props) {
+function Friend({user,socket}) {
 
     const [friendid, changeid] = useState('');
     const [friendreq, addfriendreq] = useState([]);
@@ -10,11 +10,11 @@ function Friend(props) {
     const [friends, setfriends] = useState([]);
 
     useEffect(() => {
-        socket.emit("join_room", props.user.username);
+        socket.emit("join_room", user.username);
         return () => {
             // socket.disconnect();
         };
-    }, [props.user.username]);
+    }, [user.username]);
 
     const onchange = (event) => {
         changeid(event.target.value);
@@ -30,7 +30,7 @@ function Friend(props) {
     })
 
     const sendRequest = async () => {
-        socket.emit('sendrequest',{ to: friendid, from: props.user.username},(response)=>{
+        socket.emit('sendrequest',{ to: friendid, from: user.username},(response)=>{
             alert(response);
         });
         changeid('');
@@ -48,7 +48,7 @@ function Friend(props) {
     };
 
     const deletefriend = async (index, _id) => {
-        socket.emit('deletefreind',{id:_id,username:props.user.username},(response)=>{
+        socket.emit('deletefreind',{id:_id,username:user.username},(response)=>{
             if(response.success) {
                 const updatedFriendReq = [...friends.slice(0, index), ...friends.slice(index + 1)];
                 setfriends(updatedFriendReq);
@@ -58,7 +58,7 @@ function Friend(props) {
     };
     
     const acceptRequest = async (index, _id) => {
-        socket.emit('acceptRequest',{id:_id,username:props.user.username},(response)=>{
+        socket.emit('acceptRequest',{id:_id,username:user.username},(response)=>{
             if(response.success) {
                 const updatedFriendReq = [...friendreq.slice(0, index), ...friendreq.slice(index + 1)];
                 addfriendreq(updatedFriendReq);
@@ -161,7 +161,7 @@ function Friend(props) {
                     >
                         {friends.map((data, index) => (
                                 <div className='d-flex justify-content-between align-items-center flex-row' key={index} style={{ border: '1px solid white', width: '100%', height: '5vh', textAlign: 'center', fontSize: '100%' }}>
-                                    <div style={{margin:'0px 1vw'}}><h3 style={{ display: 'inline', fontSize:'1.5vw' }}>{data.person1===props.user.username?data.person2:data.person1}</h3> </div>
+                                    <div style={{margin:'0px 1vw'}}><h3 style={{ display: 'inline', fontSize:'1.5vw' }}>{data.person1===user.username?data.person2:data.person1}</h3> </div>
                                     <div >
                                     <span style={{margin:'0px 1vw', cursor:'pointer',fontSize:'calc(1vw+2vh)'}} onClick={()=>{deletefriend(index, data._id);}}>&#10060;</span></div>
                                 </div>

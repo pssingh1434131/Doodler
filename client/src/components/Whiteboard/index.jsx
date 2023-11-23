@@ -13,11 +13,6 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   const [broadcastname, changebroadcast] = useState(true);
 
   const [isErasing, setIsErasing] = useState(false);
-  
-
-  useEffect(() => {
-    console.log('...');
-  }, [showname]);
 
   useEffect(() => {
     let username = !broadcastname?"":user.name;
@@ -182,7 +177,6 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   }, [socket]);
 
   useEffect(() => {
-    console.log(mousePointer);
     if(!ctxRef || !ctxRef.current) return;
     ctxRef.current.fillStyle = color;
     ctxRef.current.font = "12px Arial";

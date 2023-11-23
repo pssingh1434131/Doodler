@@ -54,6 +54,9 @@ function ChatBody({ socket }) {
             if (response.success && response.data.length > 0) {
                 setmsgs(response.data);
             }
+            else{
+                setmsgs([]);
+            }
         })
     }, [slnum, selectedchat, prselectedchat]);
 

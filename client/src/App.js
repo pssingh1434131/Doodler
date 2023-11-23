@@ -27,6 +27,9 @@ function App() {
   const [users, setUsers] = useState([]);
   const [round, setround] = useState(1);
   const [numberofplayer, setplayercount] = useState(2);
+  const [blocked, setblocked] = useState(false);
+  const [myindex, setIndex] = useState(-1);
+  const user = JSON.parse(localStorage.getItem('user'));
   const PrivateRoute = ({ element, path }) => {
     const user = JSON.parse(localStorage.getItem('user'));
     return user ? element : <Navigate to="/" />;
@@ -35,48 +38,70 @@ function App() {
     const user = JSON.parse(localStorage.getItem('user'));
     return user ? <Navigate to="/home" /> : element;
   }
-
   useEffect(() => {
     const handleUserJoined = (data) => {
-      if (data.success) {
-        setUsers(data.users);
-        setround(1);
-        if(data.numberofplayers){
-          setplayercount(data.numberofplayers);
+        if (data.success) {
+            setUsers(data.users);
+            setround(1);
+            if (data.numberofplayers) {
+                if (data.users.length == data.numberofplayers) {
+                    for (let i = 0; i < data.users.length; i++) {
+                        if (data.users[i].name === user.username) {
+                            setIndex(i);
+                            break;
+                        }
+                    }
+                }
+                setplayercount(data.numberofplayers);
+            }
+            else{
+              if (data.users.length == numberofplayer) {
+                for (let i = 0; i < data.users.length; i++) {
+                    if (data.users[i].name === user.username) {
+                        setIndex(i);
+                        break;
+                    }
+                }
+            }
+            }
+        } else {
+            console.log("userJoined error");
         }
-      } else {
-        console.log("userJoined error");
-      }
     };
 
+    const blockuserchat = (name) => {
+      if (myindex!==-1&&users[myindex].name == name) {
+          setblocked(true);
+      }
+  }
+
     const handleAllUsers = (data) => {
-      setUsers(data);
+        setUsers(data);
     };
 
     const handleUserJoinedMessage = (data) => {
-      toast.info(`${data} joined the room`);
+        console.log(data);
+        toast.info(`${data} joined the room`);
     };
 
     const handleUserLeftMessage = (data) => {
-      toast.info(`${data} left the room`);
-      setUsers((prevUsers) => prevUsers.filter((user) => user.name !== data));
+        toast.info(`${data} left the room`);
+        setUsers((prevUsers) => prevUsers.filter((user) => user.name !== data));
     };
 
     socket.on("userIsJoined", handleUserJoined);
     socket.on("allUsers", handleAllUsers);
     socket.on("userJoinedMessageBroadcasted", handleUserJoinedMessage);
     socket.on("userLeftMessageBroadcasted", handleUserLeftMessage);
-
-    // Cleanup function
+    socket.on("blockuserchat", blockuserchat);
     return () => {
-      // Removing event listeners
-      socket.off("userIsJoined", handleUserJoined);
-      socket.off("allUsers", handleAllUsers);
-      socket.off("userJoinedMessageBroadcasted", handleUserJoinedMessage);
-      socket.off("userLeftMessageBroadcasted", handleUserLeftMessage);
+        socket.off("userIsJoined", handleUserJoined);
+        socket.off("allUsers", handleAllUsers);
+        socket.off("userJoinedMessageBroadcasted", handleUserJoinedMessage);
+        socket.off("userLeftMessageBroadcasted", handleUserLeftMessage);
+        socket.off("blockuserchat", blockuserchat);
     };
-  }, [socket]);
-
+}, [socket, myindex]);
   const uuid = () => {
     let S4 = () => {
       return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
@@ -113,7 +138,7 @@ function App() {
           <Route
             exact
             path="/home"
-            element={<PrivateRoute element={<Home />} />}
+            element={<PrivateRoute element={<Home socket={socket}/>} />}
           />
           <Route
             exact
@@ -128,7 +153,7 @@ function App() {
             element={<PrivateRoute element={<Lobby socket={socket} numberofplayer={numberofplayer}/>} />} />
           <Route exact
             path="/:roomId"
-            element={<PrivateRoute element={<RoomPage users ={users} setUsers={setUsers} socket={socket} round={round} setround={setround} numberofplayer={numberofplayer}/>} />}
+            element={<PrivateRoute element={<RoomPage socket={socket} round={round} setround={setround} numberofplayer={numberofplayer} users={users} setUsers={setUsers} myindex={myindex} blocked={blocked} setblocked={setblocked} />} />}
           />
 
         </Routes>

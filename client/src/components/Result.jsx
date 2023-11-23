@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from "react-router-dom";
 import winimage from "../celebration.png"
 
-function Result({ users, myindex }) {
+function Result({ users, myindex,socket }) {
     const [winner, setwinner] = useState([]);
     const navigate = useNavigate();
     useEffect(() => {
@@ -23,7 +23,14 @@ function Result({ users, myindex }) {
     }, [users])
 
     const savehistory = async () => {
-        let data = winner.includes(myindex) ? { winner: users[myindex].name, loser: 'friends' } : { winner: 'friends', loser: users[myindex].name };
+        let opponent = users.length===2?users[(myindex+1)%users.length].name:'friends'
+        let data = winner.includes(myindex) ? { winner: users[myindex].name, loser: opponent } : { winner: opponent, loser: users[myindex].name };
+        if(users.length===2)
+        {
+            socket.emit("handlegamesave", data);
+            navigate("/home");
+            return;
+        }
         const response = await fetch("http://localhost:3001/game/uploadGame", {
             method: 'POST',
             headers: {

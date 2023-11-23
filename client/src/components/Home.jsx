@@ -3,7 +3,7 @@ import Navbar from './Navbar'
 import HomeBody from './HomeBody'
 import updateStatus from '../services/setStatus'
 
-function Home() {
+function Home({socket}) {
   useEffect(() => {
     updateStatus('online');
 
@@ -23,7 +23,7 @@ function Home() {
     <div className='d-flex justify-content-center align-item-center flex-column'>
       <Navbar chat={true}/>
       <div className='d-flex justify-content-center' style={{marginTop:'8vh'}}>
-        <HomeBody/>
+        <HomeBody socket={socket}/>
       </div>
     </div>
   )

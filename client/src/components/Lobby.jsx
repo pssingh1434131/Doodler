@@ -38,24 +38,31 @@ function Lobby({ socket, numberofplayer }) {
 
   // },[socket])
 
-  let randomPlayer = null;
-  socket.on('reqforjoinroom', (data) => {
-    if (timet) clearTimeout(timet);
-    let str = data.roomId;
-    let roomData = {
-      name: user.username,
-      roomId: str,
-      userId: user._id,
-      image: user.image,
-      host: false,
-      presenter: false,
-      score:0
-    };
-    randomPlayer = data.player1.username === user.username ? data.player2 : data.player1;
-    setplayer(randomPlayer)
-    socket.emit("userJoined", {roomData, numberofplayer});
-    navigate(`/${str}`);
-  })
+  useEffect(() => {
+    const reqtojoin = (data) => {
+      let randomPlayer = null;
+      if (timet) clearTimeout(timet);
+      let str = data.roomId;
+      let roomData = {
+        name: user.username,
+        roomId: str,
+        userId: user.username,
+        image: user.image,
+        host: false,
+        presenter: false,
+        score: 0
+      };
+      randomPlayer = data.player1.username === user.username ? data.player2 : data.player1;
+      setplayer(randomPlayer);
+      socket.emit("userJoined", { roomData, numberofplayer });
+      navigate(`/${str}`);
+    }
+
+    socket.on('reqforjoinroom', reqtojoin);
+    return () => {
+      socket.off('reqforjoinroom', reqtojoin);
+    }
+  }, [socket])
 
   return (
     <div className="d-flex align-items-center justify-content-around" style={{ height: '100vh', color: 'white' }}>

@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react'
 import Friend from './Friend';
 import {Link} from "react-router-dom"
 
-function HomeBody() {
+function HomeBody({socket}) {
   const [gameHistory, setgameHistory] = useState([]);
   const user = JSON.parse(localStorage.getItem('user'));
   useEffect(() => {
+    socket.emit('join',user.username);
     const fetchGameHistory = async () => {
       try {
         const response = await fetch("http://localhost:3001/game/getHistory", {
@@ -28,6 +29,17 @@ function HomeBody() {
     };
     fetchGameHistory();
   }, []);
+
+  useEffect(()=>{
+    const insertnewgame = (game)=>{
+      console.log(game);
+      setgameHistory((prevHistory) => [game, ...prevHistory]);
+    }
+    socket.on("newgame", insertnewgame);
+    return ()=>{
+      socket.off("newgame", insertnewgame);
+    }
+  }, [socket])
 
   return (
     <div className='d-flex' style={{ width: '100vw', padding: '0 18vw' }}>
@@ -63,7 +75,7 @@ function HomeBody() {
           </div>
         </div>}
         <div style={{ width: '45%', height: '95%' }}>
-            <Friend user={user} />
+            <Friend user={user} socket ={socket} />
         </div>
       </div>
     </div>
