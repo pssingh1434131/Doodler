@@ -4,6 +4,7 @@ import App from './App';
 import './index.css';
 
 import "react-toastify/dist/ReactToastify.min.css";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

@@ -1,26 +1,14 @@
-import React, { useState} from "react";
+import React, { useEffect, useState, useRef } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import filter from 'bad-words';
 import { toast } from 'react-toastify';
 const Filter = new filter({ replaceRegex: /[A-Za-z0-9가-힣_]/g });
 
-const Chat = ({ setOpenedChatTab, socket, chat, setChat, blocked, setblocked}) => {
+const Chat = ({ setOpenedChatTab, socket, chat, setChat, blocked, setblocked }) => {
   const [message, setMessage] = useState("");
   const [badwordcnt, increasecnt] = useState(0);
-  // useEffect(() => {
-  //   const handleReceivedMessage = (data) => {
-  //     setChat((prevChats) => [...prevChats, data]);
-  //   };
-
-  //   // Subscribing to the "messageResponse" event
-  //   socket.on("messageResponse", handleReceivedMessage);
-
-  //   // Cleaning up the event listener
-  //   return () => {
-  //     socket.off("messageResponse", handleReceivedMessage);
-  //   };
-  // }, [socket]);
+  const chatContainer = useRef(null);
   const handleSubmit = (e) => {
     e.preventDefault();
     if (message.trim() !== "") {
@@ -28,18 +16,42 @@ const Chat = ({ setOpenedChatTab, socket, chat, setChat, blocked, setblocked}) =
       let filteredword = message;
       if (isabusive) {
         toast.error(`WARNING: Bad words usage is not allowed. ${2 - badwordcnt} more warning left otherwise you will be blocked.`);
-        if (badwordcnt === 2) {
+        if (badwordcnt == 2) {
           setblocked(true);
+          localStorage.setItem('blocked', true);
           toast.error(`Chat blocked!!`);
         }
+        localStorage.setItem('badwordcnt', (badwordcnt + 1).toString());
         increasecnt(badwordcnt + 1);
         filteredword = Filter.clean(filteredword);
       }
+      localStorage.setItem('gamechat', JSON.stringify([...chat, { filteredword, name: "You" }]));
       setChat((prevChats) => [...prevChats, { filteredword, name: "You" }]);
       socket.emit("message", filteredword);
       setMessage("");
     }
   };
+  useEffect(() => {
+    // Scroll to the bottom whenever msgs state changes
+    if (chatContainer.current) {
+        chatContainer.current.scrollTop = chatContainer.current.scrollHeight;
+    }
+}, [chat]);
+  useEffect(() => {
+    let storedChat = localStorage.getItem('gamechat');
+    if (storedChat) {
+      let parsedChat = JSON.parse(storedChat);
+      setChat(parsedChat || []); // Initialize with an empty array if parsedChat is null or undefined
+    }
+    let blocked = localStorage.getItem('blocked');
+    blocked = blocked == "true" ? true : false;
+    setblocked(blocked);
+    let badword = parseInt(localStorage.getItem('badwordcnt'), 10) || 0;
+    increasecnt(badword);
+    if (badwordcnt == 3) {
+      setblocked(true);
+    }
+  }, [])
 
   return (
     <div className="position-fixed top-0 h-100 text-white bg-dark" style={{ width: "20vw", left: "0%", zIndex: 2 }}>
@@ -53,8 +65,9 @@ const Chat = ({ setOpenedChatTab, socket, chat, setChat, blocked, setblocked}) =
       <div
         className="w-100 mt-5 p-2 border border-1 border-white rounded-3 "
         style={{ height: "65%", overflow: 'auto' }}
+        ref={chatContainer}
       >
-        {chat.map((msg, index) => (
+        {chat && Array.isArray(chat) && chat.map((msg, index) => (
           <p key={index * 999} className="my-2 text-center w-100 py-2 border border-left-0 border-right-0">
             {msg.name}: {msg.filteredword}
           </p>

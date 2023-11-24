@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const cookieparser = require('cookie-parser');
 const { Server } = require('socket.io');
 const { getFriends, sendFriendRequest, receiveFriendRequest, deleteFriendRequest, acceptFriendreq, deleteFriendship } = require('./controller/friendControl');
-const { addUser, getUser, removeUser } = require("./utils/users");
+const { addUser, getUser, removeUser, removeUserbyname} = require("./utils/users");
 const { getmessages, sendmessages } = require('./controller/chatControl');
 const {uploadgame} = require("./controller/gamehistory")
 const { getuserbyusername } = require('./controller/user');
@@ -59,7 +59,7 @@ app.use('/friend', friendRouter);
 let userRoom, imgUrl, numberofplayers = 0;
 let scores = [0, 0, 0, 0, 0];
 let requestcnt = 0;
-let users = [];
+let users = [], kickeduser = [];
 
 const createobj = (user) => {
   return {
@@ -200,7 +200,7 @@ io.on('connection', (socket) => {
       users[0].presenter = true;
     }
     if (!numberofplayer) {
-      numberofplayers = parseInt(numberofplayers, 10);
+      
       io.to(userRoom).emit("userIsJoined", { success: true, users, numberofplayers });
     }
     if (numberofplayer) {
@@ -297,10 +297,21 @@ io.on('connection', (socket) => {
         data[i].score += scores[i];
       }
       data[ind % len].presenter = false;
+      while(kickeduser.includes(data[(ind + 1) % len].name)){
+        ind = (ind+1)%len;
+      }
       data[(ind + 1) % len].presenter = true;
       scores.fill(0);
+      data = data.filter(user => !kickeduser.includes(user.name));
       io.to(userRoom).emit("updatedusersarray", data);
-    }, 10000);
+      io.to(userRoom).emit("leaveroomonkick", {kickeduser, userRoom});
+      kickeduser = [];
+    }, 600000);
+  })
+
+  socket.on("kickuser", (name)=>{
+    kickeduser.push(name);
+    io.to(userRoom).emit("kickedUser", {kickeduser, name});
   })
 
   socket.on('takescore', (score) => {

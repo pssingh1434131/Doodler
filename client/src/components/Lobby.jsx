@@ -11,6 +11,9 @@ function Lobby({ socket, numberofplayer }) {
     socket.emit('join', user.username);
 
     socket.emit('updatestatus', { status: 'lobby', user: user });
+    localStorage.removeItem("blocked");
+    localStorage.removeItem("badwordcnt");
+    localStorage.removeItem("gamechat");
     updateStatus('lobby');
 
     const handleBeforeUnload = () => {

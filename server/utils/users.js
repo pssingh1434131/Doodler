@@ -26,6 +26,14 @@ const removeUser = (id) => {
   }
 };
 
+const removeUserbyname = (name, roomId) => {
+  const index = users.findIndex((user) => user.name === name && user.roomId === roomId);
+
+  if (index !== -1) {
+    return users.splice(index, 1)[0];
+  }
+};
+
 //get a user from the list
 const getUser = (id)=>{
     return users.find((user)=>user.socketId===id);
@@ -40,5 +48,6 @@ module.exports = {
   addUser,
   removeUser,
   getUser,
-  getUsersInRoom
+  getUsersInRoom,
+  removeUserbyname
 };

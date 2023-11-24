@@ -27,3 +27,12 @@ module.exports.sendmessages = async (to, from, msg) => {
     }
 }
 
+module.exports.sendinvite = async (req, res)=>{
+    try{
+        const sentmsg = await chatModel.create(req.body);
+        return res.json({success:true});
+    }
+    catch(err){
+        return res.status(400).json({success: false});
+    }
+}

@@ -1,26 +1,25 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from 'react-toastify';
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min"
 
-const CreateRoomForm = ({ uuid, socket, user, numberofplayer, setplayercount }) => {
-
-    const [roomId, setRoomId] = useState(uuid());
-    
+const CreateRoomForm = ({ roomId, setRoomId, uuid, socket, user, numberofplayer, setplayercount }) => {
     const name = user.username;
+    const [localNumberofplayer, setLocalNumberofplayer] = useState(numberofplayer);
 
     const navigate = useNavigate();
 
     const handleCreateRoom = (e) => {
         e.preventDefault();
         if (!name) return toast.dark("Please enter your name!");
-        if (numberofplayer > 5 || numberofplayer < 2) {
+        if (localNumberofplayer > 5 || localNumberofplayer < 2) {
             setplayercount(2);
             alert("Number of players should be between 2 and 5");
             return;
         }
-        setplayercount(parseInt(numberofplayer, 10));
+        setplayercount(parseInt(localNumberofplayer, 10));
+        let numberofplayer = parseInt(localNumberofplayer, 10);
         const roomData = {
             name,
             roomId,
@@ -28,15 +27,14 @@ const CreateRoomForm = ({ uuid, socket, user, numberofplayer, setplayercount }) 
             userId: user.username,
             host: true,
             presenter: false,
-            score:0
+            score: 0,
         };
-        socket.emit("userJoined", {roomData, numberofplayer});
+        socket.emit("userJoined", { roomData, numberofplayer });
         navigate(`/${roomId}`);
-    }
+    };
 
     return (
         <form className="form w-100 mt-4">
-
             <div className="form-group">
                 <input
                     type="text"
@@ -71,16 +69,16 @@ const CreateRoomForm = ({ uuid, socket, user, numberofplayer, setplayercount }) 
             </div>
             <input
                 type="text"
-                value={numberofplayer}
-                onChange={(e) => {
-                    setplayercount(e.target.value)
-                }}
+                value={localNumberofplayer}
+                onChange={(e) => setLocalNumberofplayer(e.target.value)}
                 className="form-control my-2"
                 placeholder="Number of players(less than 6)"
             />
-            <button type="submit" onClick={handleCreateRoom} className="mt-4 btn-primary btn btn-block form-control">Generate Room</button>
+            <button type="submit" onClick={handleCreateRoom} className="mt-4 btn-primary btn btn-block form-control">
+                Generate Room
+            </button>
         </form>
-    )
+    );
 };
 
 export default CreateRoomForm;

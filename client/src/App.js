@@ -27,7 +27,6 @@ function App() {
   const [users, setUsers] = useState([]);
   const [round, setround] = useState(1);
   const [numberofplayer, setplayercount] = useState(2);
-  const [blocked, setblocked] = useState(false);
   const [myindex, setIndex] = useState(-1);
   const user = JSON.parse(localStorage.getItem('user'));
   const PrivateRoute = ({ element, path }) => {
@@ -69,12 +68,6 @@ function App() {
         }
     };
 
-    const blockuserchat = (name) => {
-      if (myindex!==-1&&users[myindex].name == name) {
-          setblocked(true);
-      }
-  }
-
     const handleAllUsers = (data) => {
         setUsers(data);
     };
@@ -93,15 +86,14 @@ function App() {
     socket.on("allUsers", handleAllUsers);
     socket.on("userJoinedMessageBroadcasted", handleUserJoinedMessage);
     socket.on("userLeftMessageBroadcasted", handleUserLeftMessage);
-    socket.on("blockuserchat", blockuserchat);
+    
     return () => {
         socket.off("userIsJoined", handleUserJoined);
         socket.off("allUsers", handleAllUsers);
         socket.off("userJoinedMessageBroadcasted", handleUserJoinedMessage);
         socket.off("userLeftMessageBroadcasted", handleUserLeftMessage);
-        socket.off("blockuserchat", blockuserchat);
     };
-}, [socket, myindex]);
+}, [socket]);
   const uuid = () => {
     let S4 = () => {
       return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
@@ -153,7 +145,7 @@ function App() {
             element={<PrivateRoute element={<Lobby socket={socket} numberofplayer={numberofplayer}/>} />} />
           <Route exact
             path="/:roomId"
-            element={<PrivateRoute element={<RoomPage socket={socket} round={round} setround={setround} numberofplayer={numberofplayer} users={users} setUsers={setUsers} myindex={myindex} blocked={blocked} setblocked={setblocked} />} />}
+            element={<PrivateRoute element={<RoomPage socket={socket} round={round} setround={setround} numberofplayer={numberofplayer} setplayercount={setplayercount} users={users} setUsers={setUsers} myindex={myindex} setIndex={setIndex} />} />}
           />
 
         </Routes>

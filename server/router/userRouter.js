@@ -1,6 +1,7 @@
 const  express = require('express');
 const userRouter = express.Router();
 const {signup, login,protectRoute,updatename,updatepassword,logout, getuser,updateavatar, getOnlineUsers, changeUserStatus, getLobbyUsers, getuserbyusername} = require('../controller/user');
+const {sendinvite} = require("../controller/chatControl");
 
 userRouter
 .route('/signup')
@@ -34,6 +35,10 @@ userRouter
 userRouter
 .route('/logout')
 .post(logout)
+
+userRouter
+.route("/sendinvite")
+.post(sendinvite);
 
 userRouter
 .route('/getonlineusers')

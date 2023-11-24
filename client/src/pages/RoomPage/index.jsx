@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect } from "react"
-import { Link } from "react-router-dom"
-import "./index.css"
+import { Link, useNavigate } from "react-router-dom"
 import Whiteboard from "../../components/Whiteboard";
 import Chat from "../../components/Chat/index";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -8,9 +7,12 @@ import "bootstrap/dist/js/bootstrap.bundle.min"
 import { BsDownload } from 'react-icons/bs';
 import updateStatus from "../../services/setStatus";
 import { toast } from "react-toastify";
-import Result from "../../components/Result"
+import Result from "../../components/Result";
+import "./index.css"
 
-const RoomPage = ({socket, round, setround, numberofplayer, users, setUsers, myindex, blocked, setblocked }) => {
+
+const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, users, setUsers, myindex, setIndex }) => {
+    const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
     const canvasRef = useRef(null);
     const ctxRef = useRef(null);
@@ -28,8 +30,23 @@ const RoomPage = ({socket, round, setround, numberofplayer, users, setUsers, myi
     const [countdown, setCountdown] = useState(5);
     const [attempts, setattempts] = useState(3);
     const [scores, setscore] = useState(Array.from({ length: numberofplayer }, () => 0));
-
+    const [blocked, setblocked] = useState(false);
+    const [kicked, setkicked] = useState([]);
     let timerId;
+
+    useEffect(() => {
+        updateStatus('busy');
+        const handleBeforeUnload = () => {
+            updateStatus('offline');
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            updateStatus('offline');
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, []);
+
     useEffect(() => {
         if (users.length === numberofplayer && countdown > 0) {
             timerId = setInterval(() => {
@@ -40,6 +57,19 @@ const RoomPage = ({socket, round, setround, numberofplayer, users, setUsers, myi
     }, [users, countdown]);
 
     useEffect(() => {
+        const blockuserchat = (name) => {
+            if (myindex !== -1 && users[myindex].name == name) {
+                setblocked(true);
+                localStorage.setItem('blocked', true);
+            }
+        }
+        socket.on("blockuserchat", blockuserchat);
+        return () => {
+            socket.off("blockuserchat", blockuserchat);
+        };
+    }, [socket, blocked, myindex, users]);
+
+    useEffect(() => {
         if (countdown == 0) {
             if (users[myindex].presenter && round <= 3) {
                 socket.emit("updateuserarray", { ind: myindex, data: users });
@@ -48,18 +78,9 @@ const RoomPage = ({socket, round, setround, numberofplayer, users, setUsers, myi
     }, [countdown])
 
     useEffect(() => {
-        updateStatus('busy');
-        const handleBeforeUnload = () => {
-            updateStatus('offline');
-        };
-
-        window.addEventListener('beforeunload', handleBeforeUnload);
-
-        return () => {
-            updateStatus('offline');
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-        };
-    }, []);
+        if (chat.length !== 0)
+            localStorage.setItem('gamechat', JSON.stringify(chat));
+    }, [chat])
 
     useEffect(() => {
         const handleReceivedMessage = (data) => {
@@ -72,20 +93,42 @@ const RoomPage = ({socket, round, setround, numberofplayer, users, setUsers, myi
 
         const updateuserarray = (data) => {
             if (data[0].presenter) setround((prev) => prev + 1);
+            for (let i = 0; i < data.length; i++) {
+                if (data[i].name == user.username) {
+                    setIndex(i);
+                    break;
+                }
+            }
+            setplayercount(data.length);
             setUsers(data);
         };
+
+        const handlekickeduser = ({ kickeduser, name }) => {
+            toast.error(`${name == user.username ? 'You are' : name + ' is'} kicked out.`);
+            setkicked(kickeduser);
+        }
+
+        const leaveroom = ({ kickeduser, roomId }) => {
+            if (kickeduser.includes(user.username)) {
+                socket.emit("leaveroom", roomId);
+                navigate('/home');
+            }
+        }
 
         socket.on("messageResponse", handleReceivedMessage);
         socket.on("drawing", handledrawingword);
         socket.on("updatedusersarray", updateuserarray);
+        socket.on("kickedUser", handlekickeduser);
+        socket.on("leaveroomonkick", leaveroom);
 
         return () => {
             socket.off("messageResponse", handleReceivedMessage);
             socket.off("drawing", handledrawingword);
             socket.off("updatedusersarray", updateuserarray);
+            socket.off("kickedUser", handlekickeduser);
+            socket.off("leaveroomonkick", leaveroom);
         };
     }, [socket]);
-
 
     const handleDownload = () => {
         const canvas = canvasRef.current;
@@ -169,6 +212,63 @@ const RoomPage = ({socket, round, setround, numberofplayer, users, setUsers, myi
         );
     };
 
+    const shareOnTwitter = (imageUrl) => {
+        const shareText = encodeURIComponent("Check out my awesome drawing!");
+        const shareURL = encodeURIComponent(imageUrl);
+        window.open(`https://twitter.com/intent/tweet?text=${shareText}&url=${shareURL}`, "_blank");
+    };
+    
+    const shareOnFacebook = (imageUrl) => {
+        const shareURL = encodeURIComponent(imageUrl);
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareURL}`, "_blank");
+    };
+
+    const shareOnInstagram = (imageUrl) => {
+        const shareText = encodeURIComponent("Check out my awesome drawing!");
+        const shareURL = encodeURIComponent(imageUrl);
+        window.open(`https://www.instagram.com/?caption=${shareText}&url=${shareURL}`, "_blank");
+    };
+
+    const shareimage = async (site) => {
+        const canvas = canvasRef.current;
+        const dataURL = canvas.toDataURL('image/png');
+        const apiKey = process.env.REACT_APP_API_KEY;
+        const uploadEndpoint = 'https://api.imgbb.com/1/upload';
+        const name = 'Doodler drawing';
+        const expiration = 3600 * 24 * 30;
+        const formData = new FormData();
+        formData.append('key', apiKey);
+        const base64String = dataURL.split(',')[1]; // Remove the prefix
+        formData.append('image', base64String);
+        formData.append('name', name);
+        formData.append('expiration', expiration);
+
+        try {
+            const response = await fetch(uploadEndpoint, {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+            console.log(data);
+            if (data.success) {
+                const imageUrl = data.data.url;
+                if(site==="facebook"){
+                    shareOnFacebook(imageUrl);
+                }
+                else if(site==="twitter"){
+                    shareOnTwitter(imageUrl);
+                }else{
+                    shareOnInstagram(imageUrl);
+                }
+            } else {
+                console.error('Error uploading image to ImgBB:', data.error.message);
+            }
+        } catch (error) {
+            console.error('Error uploading image to ImgBB:', error);
+        }
+    }
+
     const guessedword = () => {
         let score;
         if (attempts === 3) {
@@ -197,7 +297,7 @@ const RoomPage = ({socket, round, setround, numberofplayer, users, setUsers, myi
 
     if (round === 4) {
         return (<div className="d-flex justify-content-center align-items-center" style={{ height: '100vh', width: '100vw' }}>
-            <Result users={users} myindex={myindex} socket={socket}/>
+            <Result users={users} myindex={myindex} socket={socket} />
         </div>)
     }
 
@@ -206,17 +306,17 @@ const RoomPage = ({socket, round, setround, numberofplayer, users, setUsers, myi
             {users.length === numberofplayer ?
                 <div className="row" style={{ height: '100vh' }}>
                     <div className="d-flex justify-content-between align-items-center">
-                        <Link to="/home" style={{ margin: '0px 2vw', Width:'10vw', minHeight:'fit-content', display:'block',zIndex:1 }} >
+                        <Link to="/home" style={{ margin: '0px 2vw', Width: '10vw', minHeight: 'fit-content', display: 'block', zIndex: 1 }} >
                             <button
                                 type="button"
                                 className="btn btn-secondary"
-                                style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content'}}
+                                style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content' }}
                                 onClick={() => handleDisconnect()}
                             >
                                 &laquo; BACK
                             </button>
                         </Link>
-                        <div className="d-flex align-items-center justify-content-start" style={{ width: '70vw' }}>
+                        <div className="d-flex align-items-center justify-content-start" style={{ width: '50vw' }}>
                             <button
                                 type="button"
                                 className="btn btn-dark"
@@ -246,6 +346,19 @@ const RoomPage = ({socket, round, setround, numberofplayer, users, setUsers, myi
                             <BsDownload style={{ marginRight: '5px' }} />
                             <strong>Download</strong>
                         </button>
+                        {/* <button
+                            type="button"
+                            className="btn btn-secondary d-flex align-items-center"
+                            onClick={}
+                            style={{ height: "40px", minHeight: 'fit-content', width: "5vw", minWidth: 'fit-content', zIndex: 1, margin: '0px 1vw', fontSize: '18px' }}
+                        >
+                            <strong>Share Drawing</strong>
+                        </button> */}
+                        <div className="d-flex align-item-center justify-content-around" style={{ marginRight: '2vw', width: '10vw', zIndex: '1', display:users[myindex].presenter?'block':'none' }}>
+                            <a className="fab fa-facebook" onClick={() => { shareimage("facebook") }} style={{ fontSize: '50px', color: 'white', textDecoration: 'none', cursor: 'pointer' }}></a>
+                            <a className="fab fa-twitter" onClick={() => { shareimage("twitter") }} style={{ fontSize: '50px', color: 'white', textDecoration: 'none', cursor: 'pointer' }}></a>
+                            <a className="fab fa-instagram" onClick={() => { shareimage("instagram") }} style={{ fontSize: '50px', color: 'white', textDecoration: 'none', cursor: 'pointer' }}></a>
+                        </div>
                     </div>
 
                     {
@@ -264,9 +377,16 @@ const RoomPage = ({socket, round, setround, numberofplayer, users, setUsers, myi
                                     <div className="w-100 mt-5 pt-5" style={{ minWidth: 'fit-content' }}>
                                         {
                                             users.map((usr, index) => (
-                                                <div key={index * 999} className="my-3  text-center w-100 d-flex justify-content-between align-items-center" style={{ border: '1px solid white', borderRadius: '5px', padding: '1px 0px', height: '35px', minWidth: 'fit-content' }}>
-                                                    <div style={{ margin: '0px 5px' }}>{usr.name} {users[myindex].userId === usr.userId && "(You)"}</div> {users[myindex].host && <div style={{ fontSize: '13px', display: index !== myindex ? 'block' : 'none' }}><button style={{ background: 'none', borderRadius: '3px', cursor: 'pointer', color: 'white', margin: '4px' }} onClick={() => { socket.emit("blockuser", usr.name) }}>Block chat</button><button style={{ background: 'none', borderRadius: '3px', cursor: 'pointer', color: 'white', margin: '4px' }}>Kick</button></div>}
+                                                <div key={index * 999} className="my-3 text-center w-100 d-flex justify-content-between align-items-center" style={{ border: '1px solid white', borderRadius: '5px', padding: '1px 0px', height: '35px', minWidth: 'fit-content' }}>
+                                                    <div style={{ margin: '0px 5px' }}>{usr.name} {users[myindex].userId === usr.userId && "(You)"}</div>
+                                                    {users[myindex].host && (
+                                                        <div style={{ fontSize: '13px', display: index !== myindex ? 'block' : 'none' }}>
+                                                            <button style={{ background: 'none', borderRadius: '3px', cursor: 'pointer', color: 'white', margin: '4px' }} onClick={() => { socket.emit("blockuser", usr.name) }}>Block chat</button>
+                                                            <button style={{ background: 'none', borderRadius: '3px', cursor: 'pointer', color: 'white', margin: '4px' }} onClick={() => { socket.emit("kickuser", usr.name) }}>Kick</button>
+                                                        </div>
+                                                    )}
                                                 </div>
+
                                             ))
                                         }
                                     </div>
@@ -415,7 +535,7 @@ const RoomPage = ({socket, round, setround, numberofplayer, users, setUsers, myi
                         <div style={{ textAlign: 'center', fontSize: '2vw' }}>Scoreboard</div>
                         {users.map((user, index) => (
                             <div key={index} className="d-flex align-items-center justify-content-between" style={{ fontSize: '1.2vw' }}>
-                                <div>{user.name}<span style={{ color: 'red' }}>{user.presenter ? "◀" : ""}</span></div>
+                                <div>{user.name}<span style={{ color: 'red' }}>{user.presenter ? "◀" : ""}</span><span style={{ color: 'red' }}>{kicked.includes(user.name) ? "kicked" : ""}</span></div>
                                 <div>{user.score + scores[index]}</div>
                             </div>
                         ))}
