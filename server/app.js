@@ -214,7 +214,12 @@ io.on('connection', (socket) => {
     socket.broadcast.to(userRoom).emit("whiteBoardDataResponse", {
       imgURL: imgUrl,
     });
-  });
+
+    socket.broadcast.emit("whiteBoardDataCollabResponse", {          //collaboration drawing 
+      imgURL: imgUrl,
+    });
+
+});
 
   socket.on("whiteboardData", (data) => {
     imgUrl = data;
@@ -222,7 +227,15 @@ io.on('connection', (socket) => {
     socket.broadcast.to(userRoom).emit("whiteBoardDataResponse", {
       imgURL: data,
     });
+});
+
+socket.on("whiteboardDataCollab", (data) => {                                  //collaboration drawing 
+  imgUrl = data;
+  //console.log("updated image->")
+  socket.broadcast.emit("whiteBoardDataCollabResponse", {
+    imgURL: data,
   });
+});
 
   socket.on("message", (data) => {
     const filteredword = data;

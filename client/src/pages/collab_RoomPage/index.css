@@ -1,0 +1,71 @@
+.canvas-box{
+    height: 500px,
+}
+
+.shapes-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .shapes-label {
+    margin-right: 10px; 
+    
+  }
+  
+  #shape {
+    padding: 3px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+  }
+  
+  .whiteboard-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px;
+  }
+  
+  .thickness-slider {
+    display: flex;
+    align-items: center;
+    width: 200px;
+  }
+  
+  .thickness-slider input[type="range"] {
+    
+    width: 100px;
+    height: 5px;
+    border-radius: 5px;
+    background: linear-gradient(to right, #000, #000);
+    outline: none;
+    margin: 0 10px;
+  }
+  
+  .thickness-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    margin-top: -5px;
+  }
+  
+  .thickness-slider span {
+    font-size: 14px;
+    font-weight: bold;
+  }
+  
+  .whiteboard-canvas {
+    border: 1px solid #000;
+    border-radius: 10px;
+  }
+
+  .tools-container {
+    margin-bottom: 10px; 
+    padding-bottom: 10px; 
+  }

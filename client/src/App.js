@@ -9,6 +9,8 @@ import { ToastContainer, toast} from "react-toastify";
 import io from "socket.io-client"
 import Forms from './components/Forms/index'
 import RoomPage from './pages/RoomPage';
+import CollabForms from "./components/collabForms/index"
+import CollabRoomPage from "./pages/collab_RoomPage"
 
 import "./App.css";
 import Lobby from "./components/Lobby";
@@ -139,12 +141,21 @@ function App() {
           <Route exact
             path="/play"
             element={<PrivateRoute element={<Forms uuid={uuid} socket={socket} numberofplayer={numberofplayer} setplayercount={setplayercount}/>} />} />
+
+          <Route exact
+            path="/draw"
+            element={<PrivateRoute element={<CollabForms uuid={uuid} socket={socket} />} />} />
+            
           <Route exact
             path="/lobby"
             element={<PrivateRoute element={<Lobby socket={socket} numberofplayer={numberofplayer}/>} />} />
           <Route exact
             path="/:roomId"
             element={<PrivateRoute element={<RoomPage socket={socket} round={round} setround={setround} numberofplayer={numberofplayer} setplayercount={setplayercount} users={users} setUsers={setUsers} myindex={myindex} setIndex={setIndex} />} />}
+          />
+          <Route exact
+            path="/collab/:roomId"
+            element={<PrivateRoute element={<CollabRoomPage socket={socket} users={users} />} />}
           />
 
         </Routes>

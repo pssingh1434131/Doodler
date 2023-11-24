@@ -5,30 +5,15 @@ import "bootstrap/dist/js/bootstrap.bundle.min";
 
 const roughGenerator = rough.generator();
 
-const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, user, socket, thickness, setThickness }) => {
-  const [img, setImg] = useState(null);
+const CollabWhiteBoard = ({ canvasRef, ctxRef, elements, setElements, tool, color, user, socket, thickness, setThickness }) => {
+  /*const [img, setImg] = useState(null);*/
   const [isDrawing, setIsDrawing] = useState(false);
   const [mousePointer, setMousePointer] = useState({ x: 0, y: 0, userName: "" });
   const [showname, changeshowname] = useState(true);
   const [broadcastname, changebroadcast] = useState(true);
-  const [mouseusername, setmouseusername] = useState('');  const [isEraserActive, setIsEraserActive] = useState(false);
+  const [isEraserActive, setIsEraserActive] = useState(false);
   const [erasedElements, setErasedElements] = useState([]);
   
-
-  useEffect(() => {
-    if(showname) {
-      setMousePointer({x:mousePointer.x,y:mousePointer.y,userName:mouseusername});
-    }
-    else {
-      setMousePointer({x:mousePointer.x,y:mousePointer.y,userName:''});
-    }
-  }, [showname,mouseusername]);
-
-  useEffect(() => {
-    if(!user.presenter) return;
-    let username = !broadcastname?"":user.name;
-    socket.emit('changemousemove',{ x: mousePointer.x, y: mousePointer.y, userName: username });
-  }, [broadcastname,user]);
 
   const drawElements = useCallback(() => {
     if (!canvasRef.current || !ctxRef.current) {
@@ -157,42 +142,36 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
       roughness: 1,
     });
 
-    if (showname) {
+    if (showname && mousePointer.userName !== "") {
       ctxRef.current.fillStyle = color;
       ctxRef.current.font = "12px Arial";
       ctxRef.current.fillText(mousePointer.userName, mousePointer.x, mousePointer.y + 10);
     }
-    else {
-      ctxRef.current.fillStyle = color;
-      ctxRef.current.font = "12px Arial";
-      ctxRef.current.fillText('', mousePointer.x, mousePointer.y + 10);
-    }
-  }, [canvasRef, ctxRef, elements, color, mousePointer, thickness]);
+  }, [canvasRef, ctxRef, elements, color, mousePointer.x, mousePointer.y, mousePointer.userName, showname, thickness]);
+
+
  
   useEffect(() => {
-    socket.on("whiteBoardDataResponse", (data) => {
-      setImg(data.imgURL);
-    });
+   socket.on("whiteBoardDataCollabResponse", (data)=>{
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext("2d");
+      var image = new Image();
+      image.onload = function() {
+        ctx.drawImage(image, 0, 0);
+      };
+      image.src = data.imgURL;
+    }
+  })
   }, [socket, canvasRef]);
 
-  useEffect(() => {
-    const mouseMove = (data) => {
-        setmouseusername(data.userName);
-        if(showname) setMousePointer(data);
-        else setMousePointer({x:data.x,y:data.y,userName:''});
-    }
-    socket.on('mouseMove',mouseMove);
-    return () => {
-      socket.off('mouseMove',mouseMove);
-    }
-  }, [socket,showname]);
+  
+
 
   useEffect(() => {
-    if(!ctxRef || !ctxRef.current) return;
-    ctxRef.current.fillStyle = color;
-    ctxRef.current.font = "12px Arial";
-    ctxRef.current.fillText(mousePointer.userName, mousePointer.x, mousePointer.y + 10);
-  }, [mousePointer]);
+    socket.on("mouseMove", ({ x, y, userName }) => {
+      setMousePointer({ x, y, userName });
+    });
+  }, [socket]);
 
   useEffect(() => {
     if (!canvasRef || !canvasRef.current) {
@@ -222,8 +201,10 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     }
 
     drawElements();
+
     const canvasImage = canvasRef.current.toDataURL();
-    socket.emit("whiteboardData", canvasImage);
+    socket.emit("whiteboardDataCollab", canvasImage);
+
   }, [elements, canvasRef, socket, ctxRef, drawElements]);
 
 
@@ -353,8 +334,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
 
   const handleMouseMove = (e) => {
     const { offsetX, offsetY } = e.nativeEvent;
-    let ssusername = showname?user.name:'';        
-    setMousePointer({ x: offsetX, y: offsetY, userName: ssusername });
+    setMousePointer({ x: offsetX, y: offsetY, userName: user.name });
     
     if (isDrawing) {
       if ((isEraserActive && tool === "eraser")) {
@@ -513,10 +493,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
       setErasedElements((prevErasedElements) => [...prevErasedElements, ...elementsToErase]);
     }
     
-    let susername = showname?user.name:"";
-    let busername = broadcastname?user.name:"";
-    setmouseusername(busername);
-    setMousePointer({ x: offsetX, y: offsetY, userName: susername });
+    socket.emit("mouseMove", { x: offsetX, y: offsetY, userName: user.name });
   };
 
   const handleMouseUp = () => {
@@ -524,27 +501,11 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     setIsEraserActive(false);
   };
 
-
-  if (!user?.presenter) {
+  /*if (!user?.presenter) {
     return (
-      <>
-        <div className="col-md-8 form-check form-switch px-0 mx-auto">
-        <input
-          className="form-check-input"
-          type="checkbox"
-          role="switch"
-          id="flexSwitchCheckDefault"
-          onClick={() => {
-            changeshowname(!showname);
-          }}
-        />
-        <label className="form-check-label" htmlFor="flexSwitchCheckDefault">
-          Don't broadcast your name
-        </label>
-      </div>
       <div
         className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3"
-        style={{ height: "70vh", width: "100%", backgroundColor: "white", borderRadius: "20px" }}
+        style={{ height: "60vh", width: "100%", backgroundColor: "white", borderRadius: "20px" }}
       >
         <img
           src={img}
@@ -555,9 +516,9 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
           }}
         />
       </div>
-      </> 
     );
   }
+  */
 
   return (
     <>
@@ -575,9 +536,23 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
           {showname === true ? "Don't show name with mouse pointer" : "Show name with mouse pointer"}
         </label>
       </div>
+      <div className="col-md-8 form-check form-switch px-0 mx-auto">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="flexSwitchCheckDefault"
+          onClick={() => {
+            changebroadcast(!broadcastname);
+          }}
+        />
+        <label className="form-check-label" htmlFor="flexSwitchCheckDefault">
+          {broadcastname === true ? "Don't broadcast your name" : "Broadcast your name"}
+        </label>
+      </div>
       <div
         className="col-md-8 overflow-hidden border border-dark px-0 mx-auto mt-3"
-        style={{ height: "70vh", width: "100%", backgroundColor: "white", borderRadius: "20px" }}
+        style={{ height: "60vh", width: "100%", backgroundColor: "white", borderRadius: "20px" }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -588,4 +563,4 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   );
 };
 
-export default Whiteboard;
+export default CollabWhiteBoard;
