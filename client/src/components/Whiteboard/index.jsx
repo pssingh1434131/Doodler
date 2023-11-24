@@ -11,27 +11,24 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   const [mousePointer, setMousePointer] = useState({ x: 0, y: 0, userName: "" });
   const [showname, changeshowname] = useState(true);
   const [broadcastname, changebroadcast] = useState(true);
-
+  const [mouseusername, setmouseusername] = useState('');
   const [isErasing, setIsErasing] = useState(false);
   
 
   useEffect(() => {
-    console.log('...');
-  }, [showname]);
+    if(showname) {
+      setMousePointer({x:mousePointer.x,y:mousePointer.y,userName:mouseusername});
+    }
+    else {
+      setMousePointer({x:mousePointer.x,y:mousePointer.y,userName:''});
+    }
+  }, [showname,mouseusername]);
 
   useEffect(() => {
+    if(!user.presenter) return;
     let username = !broadcastname?"":user.name;
     socket.emit('changemousemove',{ x: mousePointer.x, y: mousePointer.y, userName: username });
-  }, [broadcastname]);
-
-
-  const changeshownameforuser = () => {
-    changeshowname(!showname);
-  }
-
-  const changeshownameforalluser = () => {
-    changebroadcast(!broadcastname);
-  }
+  }, [broadcastname,user]);
 
   const drawElements = useCallback(() => {
     if (!canvasRef.current || !ctxRef.current) {
@@ -166,7 +163,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
       ctxRef.current.font = "12px Arial";
       ctxRef.current.fillText('', mousePointer.x, mousePointer.y + 10);
     }
-  }, [canvasRef, ctxRef, elements, color, mousePointer.x, mousePointer.y, mousePointer.userName, showname, thickness]);
+  }, [canvasRef, ctxRef, elements, color, mousePointer, thickness]);
  
   useEffect(() => {
     socket.on("whiteBoardDataResponse", (data) => {
@@ -175,11 +172,17 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   }, [socket, canvasRef]);
 
   useEffect(() => {
-    socket.on("mouseMove", (data) => {
-      // console.log(data);
-      setMousePointer(data);
-    });
-  }, [socket]);
+    const mouseMove = (data) => {
+        console.log(data);
+        setmouseusername(data.userName);
+        if(showname) setMousePointer(data);
+        else setMousePointer({x:data.x,y:data.y,userName:''});
+    }
+    socket.on('mouseMove',mouseMove);
+    return () => {
+      socket.off('mouseMove',mouseMove);
+    }
+  }, [socket,showname]);
 
   useEffect(() => {
     console.log(mousePointer);
@@ -339,7 +342,8 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
 
   const handleMouseMove = (e) => {
     const { offsetX, offsetY } = e.nativeEvent;
-    setMousePointer({ x: offsetX, y: offsetY, userName: user.name });
+    let ssusername = showname?user.name:'';        
+    setMousePointer({ x: offsetX, y: offsetY, userName: ssusername });
     
     if (isDrawing) {
       if (tool === "pencil") {
@@ -470,7 +474,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     }
     let susername = showname?user.name:"";
     let busername = broadcastname?user.name:"";
-    socket.emit("changemousemove", { x: offsetX, y: offsetY, userName: busername });
+    setmouseusername(busername);
     setMousePointer({ x: offsetX, y: offsetY, userName: susername });
   };
 
@@ -495,21 +499,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
           }}
         />
         <label className="form-check-label" htmlFor="flexSwitchCheckDefault">
-          {showname === true ? "Don't show name with mouse pointer" : "Show name with mouse pointer"}
-        </label>
-      </div>
-      <div className="col-md-8 form-check form-switch px-0 mx-auto">
-        <input
-          className="form-check-input"
-          type="checkbox"
-          role="switch"
-          id="flexSwitchCheckDefault"
-          onClick={() => {
-            changebroadcast(!broadcastname);
-          }}
-        />
-        <label className="form-check-label" htmlFor="flexSwitchCheckDefault">
-          {broadcastname === true ? "Don't broadcast your name" : "Broadcast your name"}
+          Don't broadcast your name
         </label>
       </div>
       <div
@@ -537,22 +527,12 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
           type="checkbox"
           role="switch"
           id="flexSwitchCheckDefault"
-          onClick={changeshownameforuser}
+          onClick={() => {
+            changeshowname(!showname);
+          }}
         />
         <label className="form-check-label" htmlFor="flexSwitchCheckDefault">
           {showname === true ? "Don't show name with mouse pointer" : "Show name with mouse pointer"}
-        </label>
-      </div>
-      <div className="col-md-8 form-check form-switch px-0 mx-auto">
-        <input
-          className="form-check-input"
-          type="checkbox"
-          role="switch"
-          id="flexSwitchCheckDefault"
-          onClick={changeshownameforalluser}
-        />
-        <label className="form-check-label" htmlFor="flexSwitchCheckDefault">
-          {broadcastname === true ? "Don't broadcast your name" : "Broadcast your name"}
         </label>
       </div>
       <div

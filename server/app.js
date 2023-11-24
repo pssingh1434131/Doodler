@@ -234,7 +234,7 @@ io.on('connection', (socket) => {
   })
   
   socket.on('changemousemove',({ x, y, userName }) => {
-    socket.broadcast.to(userRoom).emit("mouseMove", { x, y, userName })
+    io.to(userRoom).emit("mouseMove", { x, y, userName })
   })
 
 
@@ -300,7 +300,7 @@ io.on('connection', (socket) => {
       data[(ind + 1) % len].presenter = true;
       scores.fill(0);
       io.to(userRoom).emit("updatedusersarray", data);
-    }, 60000);
+    }, 600000);
   })
 
   socket.on('takescore', (score) => {
