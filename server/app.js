@@ -234,7 +234,7 @@ io.on('connection', (socket) => {
   })
   
   socket.on('changemousemove',({ x, y, userName }) => {
-    socket.broadcast.to(userRoom).emit("mouseMove", { x, y, userName })
+    io.to(userRoom).emit("mouseMove", { x, y, userName })
   })
 
 
@@ -306,7 +306,7 @@ io.on('connection', (socket) => {
       io.to(userRoom).emit("updatedusersarray", data);
       io.to(userRoom).emit("leaveroomonkick", {kickeduser, userRoom});
       kickeduser = [];
-    }, 600000);
+    }, 60000);
   })
 
   socket.on("kickuser", (name)=>{

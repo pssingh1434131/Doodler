@@ -1,7 +1,8 @@
 const  express = require('express');
 const userRouter = express.Router();
-const {signup, login,protectRoute,updatename,updatepassword,logout, getuser,updateavatar, getOnlineUsers, changeUserStatus, getLobbyUsers, getuserbyusername} = require('../controller/user');
+const {signup, login,protectRoute,updatename,updatepassword,logout, getuser,updateavatar, getOnlineUsers, changeUserStatus, getLobbyUsers, getuserbyusername,forgotpassword,resetpassword,emailverification} = require('../controller/user');
 const {sendinvite} = require("../controller/chatControl");
+const { reset } = require('nodemon');
 
 userRouter
 .route('/signup')
@@ -10,6 +11,18 @@ userRouter
 userRouter
 .route('/login')
 .post(login);
+
+userRouter
+.route('/forgotpassword')
+.post(forgotpassword);
+
+userRouter
+.route('/resetpass')
+.patch(resetpassword);
+
+userRouter
+.route('/emailverification')
+.post(emailverification);
 
 userRouter.use(protectRoute);
 userRouter

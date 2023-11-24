@@ -73,7 +73,6 @@ function App() {
     };
 
     const handleUserJoinedMessage = (data) => {
-        console.log(data);
         toast.info(`${data} joined the room`);
     };
 

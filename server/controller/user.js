@@ -3,6 +3,63 @@ const onlineUsers = require('../model/onlineUsers');
 const jwt = require('jsonwebtoken');
 const jwt_key = process.env.JWT_KEY;
 const bcrypt = require('bcryptjs');
+const {sendmail} = require('./helper');
+
+async function generateRandomString(length) {
+    const cryptoRandomString = await import('crypto-random-string');
+    return cryptoRandomString.default({ length: length });
+}
+
+
+module.exports.forgotpassword = async(req,res) => {
+    try {
+        const {email} = req.body;
+        const find = await userModel.findOne({email: email});
+        if(find) {
+            let otp = await generateRandomString(6);
+            console.log(otp);
+            let data = await sendmail(email,'Reset Password','Otp for reset password is  '+otp);
+            if(data.success) {
+                res.json({success:true,otp:otp});
+            }
+            else {
+                res.status(400).json({success: false,msg:data.msg});
+            }
+        }
+        else {
+            res.status(400).json({success: false,msg:'invalid credentials'});
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(400).json({success: false,msg:'error in forgot password'});
+    }
+}
+
+module.exports.resetpassword = async(req,res) => {
+    try {
+        const {email,password} = req.body;
+        const user = await userModel.findOne({email:email});
+        const salt = await bcrypt.genSalt(10);
+        const secPass = await bcrypt.hash(password, salt);
+        user.password = secPass;
+        const updatedData = await user.save();
+        res.json({success:true});
+    } catch (err) {
+        res.status(400).json({success: false,msg:'error in reseting password'});
+    }
+}
+
+module.exports.emailverification = async(req,res) => {
+    try {
+        const {email} = req.body;
+        let otp = await generateRandomString(6);
+        // console.log(otp);
+        let data = await sendmail(email,'Email Verification','Otp for email verification is  '+otp);
+        res.json({success:true,otp:otp});
+    } catch (err) {
+        res.status(400).json({success: false,msg:'error in reseting password'});
+    }
+}
 
 module.exports.signup = async(req, res)=>{
     try{
@@ -19,6 +76,7 @@ module.exports.signup = async(req, res)=>{
         return res.json({success: true});
     }
     catch(err){
+        console.log(err);
         return res.status(400).json({success: false});
     }
 }
