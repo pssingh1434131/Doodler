@@ -3,6 +3,7 @@ const friendRequest = require('../model/friendRequest');
 const friendship = require('../model/friendship');
 const chatModel = require('../model/chatModel');
 
+// Retrieve friends list for a specific user
 module.exports.getFriends = async(username)=>{
     try{
         const user = username;
@@ -19,6 +20,7 @@ module.exports.getFriends = async(username)=>{
     }
 }
 
+// Send a friend request from 'from' user to 'to' user
 module.exports.sendFriendRequest = async (to, from)=>{
     try{
         let touser = to;
@@ -43,7 +45,7 @@ module.exports.sendFriendRequest = async (to, from)=>{
         return {success: false,data: [],msg:'failed to send request'};
     }
 }
-
+// Retrieve friend requests received by a user
 module.exports.receiveFriendRequest = async(username)=>{
     try{
         let user = username;
@@ -55,6 +57,7 @@ module.exports.receiveFriendRequest = async(username)=>{
     }
 }
 
+// Delete a specific friend request by its ID
 module.exports.deleteFriendRequest = async(id)=>{
     try{
         const deletereq = await friendRequest.findByIdAndDelete(id);
@@ -64,6 +67,7 @@ module.exports.deleteFriendRequest = async(id)=>{
     }
 }
 
+// Delete a friendship by its ID and associated chat messages
 module.exports.deleteFriendship = async(id)=>{
     try{
         const deletefriend = await friendship.findByIdAndDelete(id);
@@ -78,6 +82,7 @@ module.exports.deleteFriendship = async(id)=>{
     }
 }
 
+// Accept a friend request by deleting it and creating a friendship
 module.exports.acceptFriendreq = async (id) => {
     try {
 

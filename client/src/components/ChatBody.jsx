@@ -1,8 +1,10 @@
+// Importing necessary modules and components
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from "react-router-dom";
 import moment from 'moment';
 import "../Chat.css"
 
+// ChatBody component
 function ChatBody({ socket }) {
     const user = JSON.parse(localStorage.getItem('user'));
     const [friends, setfriends] = useState([]);
@@ -13,9 +15,10 @@ function ChatBody({ socket }) {
     const [text, settext] = useState("");
     const chatContainerRef = useRef(null);
 
+    // Effect to fetch initial data and join chat room on component mount
     useEffect(() => {
         socket.emit("joinchatroom", user.username);
-        socket.on('getfriendlist', (data) => {
+        socket.on('getfriendlist', (data) => {    // Setting friends and initial chat messages
             if (data.length > 0) {
                 setfriends(data);
                 socket.emit('getmessages', data[0], (response) => {
@@ -33,6 +36,7 @@ function ChatBody({ socket }) {
         };
     }, []);
 
+    
     useEffect(() => {
         // Scroll to the bottom whenever msgs state changes
         if (chatContainerRef.current) {
@@ -40,6 +44,7 @@ function ChatBody({ socket }) {
         }
     }, [msgs]);
 
+    // Effect to handle chat room changes
     useEffect(() => {
         if (prselectedchat !== '') {
             let array = [user.username, prselectedchat];
@@ -73,6 +78,7 @@ function ChatBody({ socket }) {
     }, [socket]);
 
 
+    // Function to handle selecting a chat from the sidebar
     const selectchat = (index, data) => {
         changeprselectedchat(selectedchat);
         setslnum(index);
@@ -80,12 +86,12 @@ function ChatBody({ socket }) {
         else changeselectedchat(data.person1);
     };
 
-
+// Function to handle text input change
     const handletextchange = (event) => {
         settext(event.target.value);
     }
 
-
+// Function to send a message
     const sendmessage = (e) => {
         e.preventDefault();
         const msg1 = {
@@ -105,7 +111,7 @@ function ChatBody({ socket }) {
         })
     };
 
-
+    // Return statement containing JSX for rendering the chat interface
     return (
         <div className='d-flex flex-column' style={{ width: '100vw', padding: '0 10vw' }}>
             <Link to="/home" style={{ width: '0px', minWidth: 'fit-content' }} ><button className='btn btn-secondary' style={{ width: '8vw', margin: '3vh 0px' }} > &laquo; BACK</button></Link>

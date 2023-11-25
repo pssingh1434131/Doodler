@@ -5,6 +5,7 @@ import updateStatus from '../services/setStatus'
 
 function Home({socket}) {
   useEffect(() => {
+    // Set the user's status to 'online' when they enter the page
     updateStatus('online');
 
     // Set the status to 'offline' when the user leaves the page
@@ -12,9 +13,11 @@ function Home({socket}) {
       updateStatus('offline');
     };
 
+    // Listen for the 'beforeunload' event to detect when the user is leaving the page
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
+      // Clean up by setting the status to 'offline' and removing the event listener
       updateStatus('offline');
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };

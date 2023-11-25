@@ -6,15 +6,21 @@ import "bootstrap/dist/js/bootstrap.bundle.min"
 
 const JoinRoomForm = ({ uuid, socket, user, setuser}) =>{
 
-
+// State for the room ID input
     const [roomId, setRoomId] = useState("");
-    const name = user.username;
 
+    const name = user.username;  // Extract username from user object
+
+    // React Router hook for navigation
     const navigate = useNavigate();
 
+    // Function to handle joining a room
     const handleRoomJoin = (e)=>{
         e.preventDefault();
+
+         // Check if the username is entered
         if (!name) return toast.dark("Please enter your name!");
+        // Prepare room data to be emitted to the server
         const roomData = {
         name,
         roomId,
@@ -24,10 +30,12 @@ const JoinRoomForm = ({ uuid, socket, user, setuser}) =>{
         presenter: false,
         score:0
         };
+        // Emit event to the server indicating user joined and room data
         socket.emit("userJoined", {roomData, numberofplayer:undefined});
+        // Navigate to the specified room ID
         navigate(`/${roomId}`);
     }
-
+// JSX form for joining a room
     return (
         <form className="form w-100 mt-4">
 

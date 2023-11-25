@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import logo from "../logo192.png";
 
 function Forgotpassword() {
+  // Initializing state variables
   const navigate = useNavigate();
   const [email, setemail] = useState('');
   const [otp, setotp] = useState('');
@@ -13,7 +14,7 @@ function Forgotpassword() {
   const [password, setPassword] = useState('');
   const [confpass, setConfpass] = useState('');
 
-
+// Event handlers for input changes
   const handleEmailChange = (event) => {
     setemail(event.target.value);
   };
@@ -30,7 +31,7 @@ function Forgotpassword() {
     setConfpass(event.target.value);
   };
 
-
+  // Function to submit email for password reset
   const submitForm = async (e) => {
     e.preventDefault();
     let data = { email: email };
@@ -53,6 +54,7 @@ function Forgotpassword() {
     }
   };
 
+  // Function to submit OTP verification
   const submitForm2 = async (e) => {
     e.preventDefault();
     if (otp == curotp) {
@@ -65,6 +67,7 @@ function Forgotpassword() {
     }
   };
 
+  // Function to submit new password
   const submitForm3 = async (e) => {
     e.preventDefault();
     if (password === confpass) {
@@ -87,7 +90,7 @@ function Forgotpassword() {
     else alert('both passwords are not equal');
   };
 
-
+ // JSX rendering of the forgot password form
   return (
     <div
       className="App d-flex justify-content-around align-items-center"

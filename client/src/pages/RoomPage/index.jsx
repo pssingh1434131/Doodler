@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
+// Import necessary modules and components
 import Whiteboard from "../../components/Whiteboard";
 import Chat from "../../components/Chat/index";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -12,6 +13,7 @@ import "./index.css"
 
 
 const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, users, setUsers, myindex, setIndex }) => {
+    // State and refs initialization
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
     const canvasRef = useRef(null);
@@ -34,6 +36,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
     const [kicked, setkicked] = useState([]);
     let timerId;
 
+     // Effect to update user status when the component mounts and unmounts
     useEffect(() => {
         updateStatus('busy');
         const handleBeforeUnload = () => {
@@ -47,6 +50,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
         };
     }, []);
 
+    // Effect to start countdown and change round status based on user count
     useEffect(() => {
         if (users.length === numberofplayer && countdown > 0) {
             timerId = setInterval(() => {
@@ -56,6 +60,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
         return () => clearInterval(timerId);
     }, [users, countdown]);
 
+    // Effect to block chat for specific users
     useEffect(() => {
         const blockuserchat = (name) => {
             if (myindex !== -1 && users[myindex].name == name) {
@@ -114,7 +119,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
                 navigate('/home');
             }
         }
-
+        // socket event listeners 
         socket.on("messageResponse", handleReceivedMessage);
         socket.on("drawing", handledrawingword);
         socket.on("updatedusersarray", updateuserarray);
@@ -130,6 +135,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
         };
     }, [socket]);
 
+     // Function to download canvas as an image
     const handleDownload = () => {
         const canvas = canvasRef.current;
 
@@ -167,7 +173,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
     const handleDisconnect = () => {
         socket.emit("Userdisconnect", user);
     };
-    const handleClearCanvas = () => {
+    const handleClearCanvas = () => {      // for clearing canvas
         const canvas = canvasRef.current;
         const ctx = canvas.getContext("2d")
         ctx.fillRect = "white";
@@ -175,7 +181,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
         setElements([]);
     }
 
-    const undo = () => {
+    const undo = () => {     // undo operation on drawing
 
         setHistory((prevHistory) => [
             ...prevHistory,
@@ -186,7 +192,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
         );
     };
 
-    const redo = () => {
+    const redo = () => {   // redo operation
 
         setElements((prevElements) => [
             ...prevElements,
@@ -196,7 +202,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
         setHistory((prevHistory) => prevHistory.slice(0, prevHistory.length - 1));
     };
 
-    const handleThicknessChange = (newThickness) => {
+    const handleThicknessChange = (newThickness) => {    //adjust thickeness of stroke 
         setThickness(newThickness);
 
         setElements((prevElements) =>
@@ -212,6 +218,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
         );
     };
 
+ // handle share on social media
     const shareOnTwitter = (imageUrl) => {
         const shareText = encodeURIComponent("Check out my awesome drawing!");
         const shareURL = encodeURIComponent(imageUrl);
@@ -229,7 +236,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
         window.open(`https://www.instagram.com/?caption=${shareText}&url=${shareURL}`, "_blank");
     };
 
-    const shareimage = async (site) => {
+    const shareimage = async (site) => {          //handle share image on social media
         const canvas = canvasRef.current;
         const dataURL = canvas.toDataURL('image/png');
         const apiKey = process.env.REACT_APP_API_KEY;
@@ -271,6 +278,8 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
 
     const guessedword = () => {
         let score;
+
+         // Calculate score based on attempts
         if (attempts === 3) {
             score = 100;
         }
@@ -281,6 +290,8 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
             score = 20;
         }
         let guessed = guess.toLowerCase();
+
+        // Check if guessed word matches the drawn word
         if (guessed === draw) {
             let tempscore = scores;
             tempscore[myindex] = score;
@@ -289,13 +300,15 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
             socket.emit("takescore", scores);
         }
         else {
+            // Notify user about an incorrect guess and decrease attempts
             toast.error("Incorrect guess, " + (attempts - 1) + " attemps remaining");
         }
-        setattempts(attempts - 1);
-        setguess("");
+        setattempts(attempts - 1);    // Decrease attempts
+        setguess("");    // Clear the guess input field
     };
 
     if (round === 4) {
+        // Display results if the game reaches the final round
         return (<div className="d-flex justify-content-center align-items-center" style={{ height: '100vh', width: '100vw' }}>
             <Result users={users} myindex={myindex} socket={socket} />
         </div>)
@@ -394,12 +407,16 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
                             </div>
                         )
                     }
+                     {/* Chat Tab */}
+
                     {
                         openedChatTab && (
                             <Chat setOpenedChatTab={setOpenedChatTab} socket={socket} chat={chat} setChat={setChat} user={users[myindex]} blocked={blocked} setblocked={setblocked} />
                         )
                     }
+                     {/* Drawing Tools */}
                     {
+                        
                         <div className="col-md-10 mx-auto px-1 d-flex align-items-center justify-content-center">
                             <div className="d-flex col-md-3 gap-3 justify-content-center gap-1">
                                 <div className="d-flex gap-1">
@@ -516,8 +533,9 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
                             </div>
                         </div>
                     }
-
+                    {/* Whiteboard Canvas */}
                     <div className="col-md-12 mx-auto canvas-box "  >
+                    {/* Whiteboard Component */}
                         <Whiteboard
                             canvasRef={canvasRef}
                             ctxRef={ctxRef}
@@ -531,6 +549,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
                             setThickness={setThickness}
                         />
                     </div>
+                    {/* Scoreboard Display */}
                     <div style={{ position: 'absolute', color: 'white', right: '1vw', top: '27vh', border: '1px solid white', borderRadius: '10px', backgroundColor: 'black', width: '15vw', minHeight: 'fit-content', padding: '1vh 1vw' }}>
                         <div style={{ textAlign: 'center', fontSize: '2vw' }}>Scoreboard</div>
                         {users.map((user, index) => (
@@ -554,6 +573,7 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
                             <button className="btn btn-secondary mt-2" onClick={handleguesssubmit}>Submit</button>
                         </div>
                     </div>}
+                    {/* Countdown Display */}
                     {countdown > 0 && <div className="d-flex align-items-center justify-content-center" style={{ height: '100vh', width: '100vw', fontSize: 'calc(5vh + 5vw + 10px)', position: 'absolute', zIndex: '10', color: 'grey' }}>
                         <span>
                             {countdown}

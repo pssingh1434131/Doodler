@@ -8,14 +8,17 @@ function Lobby({ socket, numberofplayer }) {
   const navigate = useNavigate();
   let timet = null;
   useEffect(() => {
-    socket.emit('join', user.username);
 
-    socket.emit('updatestatus', { status: 'lobby', user: user });
+    // the component mounts, emit socket events and perform initial setup
+    socket.emit('join', user.username);   // Join the user to the lobby room in the socket connection
+
+    socket.emit('updatestatus', { status: 'lobby', user: user });   // Update user status to 'lobby' in the socket
     localStorage.removeItem("blocked");
     localStorage.removeItem("badwordcnt");
     localStorage.removeItem("gamechat");
-    updateStatus('lobby');
+    updateStatus('lobby');   // Update status locally
 
+    // When the user leaves the page or refreshes, update the status to 'offline'
     const handleBeforeUnload = () => {
       updateStatus('offline');
     };
@@ -29,6 +32,7 @@ function Lobby({ socket, numberofplayer }) {
       navigate('/home');
     }, 60000);
 
+    // Clean up functions on component unmount or changes
     return () => {
       updateStatus('offline');
       socket.emit('deleteroom', user);
@@ -41,6 +45,7 @@ function Lobby({ socket, numberofplayer }) {
 
   // },[socket])
 
+  // useEffect to handle response when another user requests to join the room
   useEffect(() => {
     const reqtojoin = (data) => {
       let randomPlayer = null;
@@ -57,17 +62,21 @@ function Lobby({ socket, numberofplayer }) {
       };
       randomPlayer = data.player1.username === user.username ? data.player2 : data.player1;
       setplayer(randomPlayer);
-      socket.emit("userJoined", { roomData, numberofplayer });
+      socket.emit("userJoined", { roomData, numberofplayer });  // Notify the server that the user has joined
       navigate(`/${str}`);
     }
 
+    // Listen for the request to join the room
     socket.on('reqforjoinroom', reqtojoin);
+
+     // Clean up function for removing the event listener
     return () => {
       socket.off('reqforjoinroom', reqtojoin);
     }
   }, [socket])
 
   return (
+    // Render the lobby UI
     <div className="d-flex align-items-center justify-content-around" style={{ height: '100vh', color: 'white' }}>
       {user && (
         <div className="d-flex align-items-center justify-content-center" style={{ width: '30vw', height: '30vh' }}>

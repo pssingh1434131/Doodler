@@ -5,6 +5,7 @@ import updateStatus from '../services/setStatus';
 
 function Chat(props) {
   useEffect(() => {
+    // Update user status to 'online' when component mounts
     updateStatus('online');
 
     // Set the status to 'offline' when the user leaves the page
@@ -12,6 +13,7 @@ function Chat(props) {
       updateStatus('offline');
     };
 
+    // Event listener for beforeunload to update status
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
@@ -19,6 +21,7 @@ function Chat(props) {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, []);
+   // Get user data from localStorage
   const user = JSON.parse(localStorage.getItem('user'));
   return (
     <div className='d-flex justify-content-center align-item-center flex-column' style={{height:'99vh'}}>

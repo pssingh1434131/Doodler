@@ -3,8 +3,13 @@ import { useNavigate } from "react-router-dom";
 import winimage from "../celebration.png"
 
 function Result({ users, myindex,socket }) {
+    // State to store the winner(s) indexes
     const [winner, setwinner] = useState([]);
+
+     // Hook to handle navigation
     const navigate = useNavigate();
+
+    // Effect to determine winner(s) based on scores
     useEffect(() => {
         let highestScore = users[0].score;
         for (let i = 1; i < users.length; i++) {
@@ -22,6 +27,7 @@ function Result({ users, myindex,socket }) {
         setwinner(indexesOfHighestScore);
     }, [users])
 
+    // Function to save game history and navigate to home
     const savehistory = async () => {
         let opponent = users.length===2?users[(myindex+1)%users.length].name:'friends'
         let data = winner.includes(myindex) ? { winner: users[myindex].name, loser: opponent } : { winner: opponent, loser: users[myindex].name };
@@ -47,6 +53,8 @@ function Result({ users, myindex,socket }) {
         }
     }
 
+    // JSX elements representing the Result component
+    // displaying winner(s) and score(s)
     return (
         <div className="d-flex align-items-center justify-content-around" style={{ width: '100vw' }}>
             <img

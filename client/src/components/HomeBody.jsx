@@ -5,10 +5,13 @@ import {Link} from "react-router-dom"
 function HomeBody({socket}) {
   const [gameHistory, setgameHistory] = useState([]);
   const user = JSON.parse(localStorage.getItem('user'));
+
   useEffect(() => {
+    // Emit a socket event to join a room with the user's username
     socket.emit('join',user.username);
     const fetchGameHistory = async () => {
       try {
+        // Fetch the game history from the server
         const response = await fetch("http://localhost:3001/game/getHistory", {
           method: "GET",
           headers: {
@@ -17,7 +20,7 @@ function HomeBody({socket}) {
           credentials: "include",
         });
         const datat = await response.json();
-        const data = datat.games;
+        const data = datat.games;    // Extract the 'games' data from the response
         if (Array.isArray(data)) {
           setgameHistory(data);
         } else {
@@ -27,9 +30,11 @@ function HomeBody({socket}) {
         console.error('Error fetching game history:', error);
       }
     };
-    fetchGameHistory();
+    fetchGameHistory();            // Fetch the user's game history on component mount
   }, []);
 
+
+   // Listen for 'newgame' socket event to update game history
   useEffect(()=>{
     const insertnewgame = (game)=>{
       console.log(game);

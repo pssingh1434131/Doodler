@@ -9,12 +9,16 @@ const Chat = ({ setOpenedChatTab, socket, chat, setChat, blocked, setblocked }) 
   const [message, setMessage] = useState("");
   const [badwordcnt, increasecnt] = useState(0);
   const chatContainer = useRef(null);
+
+  // Function to handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     if (message.trim() !== "") {
       let isabusive = Filter.isProfane(message);
       let filteredword = message;
+
       if (isabusive) {
+         // Handling bad word usage and warning messages                      
         toast.error(`WARNING: Bad words usage is not allowed. ${2 - badwordcnt} more warning left otherwise you will be blocked.`);
         if (badwordcnt == 2) {
           setblocked(true);
@@ -38,6 +42,7 @@ const Chat = ({ setOpenedChatTab, socket, chat, setChat, blocked, setblocked }) 
     }
 }, [chat]);
   useEffect(() => {
+    // Load stored chat, blocked status, and bad word count
     let storedChat = localStorage.getItem('gamechat');
     if (storedChat) {
       let parsedChat = JSON.parse(storedChat);

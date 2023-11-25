@@ -1,6 +1,7 @@
 const  express = require('express');
 const gameModel = require('../model/gameHistory');
 
+// Retrieve game history for a user
 module.exports.getHistory = async (req, res)=>{
     try{
         const user = req.user;
@@ -15,6 +16,7 @@ module.exports.getHistory = async (req, res)=>{
     }
 }
 
+// Upload a game result
 module.exports.uploadGame = async (req, res)=>{
     try{
         let {winner, loser} = req.body;
@@ -26,6 +28,7 @@ module.exports.uploadGame = async (req, res)=>{
     }
 }
 
+// Upload a game result (helper function)
 module.exports.uploadgame = async(data)=>{
     try{
         const game = await gameModel.create(data);

@@ -3,17 +3,21 @@ import { Link, useNavigate } from "react-router-dom";
 
 function Signup() {
   const navigate = useNavigate();
+  // State for form data
   const [formData, setformData] = useState({
     name: "",
     username: "",
     email: "",
     password: "",
   });
+
+  // State for OTP-related functionality
   const [otp, setotp] = useState('');
   const [otpsent, setOtpsent] = useState(false);
   const [confpass, setconfpass] = useState("");
   const [curotp, setCurotp] = useState('');
 
+    // Event handlers for form fields
   const handleOtpChange = (event) => {
     setCurotp(event.target.value);
   };
@@ -38,8 +42,10 @@ function Signup() {
     setformData({ ...formData, username: event.target.value });
   };
 
+  // Function to send email verification and OTP
   const submitForm = async (e) => {
     e.preventDefault();
+    // Sending email for verification
     const response = await fetch("http://localhost:3001/user/emailverification", {
       method: 'POST',
       headers: {
@@ -57,7 +63,7 @@ function Signup() {
       alert("Invalid email");
     }
   }
-
+// Function to submit OTP and complete signup process
   const submitForm3 = async (e) => {
     e.preventDefault();
     if (otp === curotp) {

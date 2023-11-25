@@ -8,6 +8,7 @@ import updateStatus from "../../services/setStatus";
 
 const CollabForms = ({ uuid , socket}) =>{
     useEffect(() => {
+      // Set the status to 'online' when the user leaves the page
         updateStatus('online');
     
         // Set the status to 'offline' when the user leaves the page

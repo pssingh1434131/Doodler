@@ -3,12 +3,13 @@ import io from "socket.io-client";
 let socket = io.connect("http://localhost:3001");
 
 function Friend({user,socket}) {
-
+    // State variables initialization
     const [friendid, changeid] = useState('');
     const [friendreq, addfriendreq] = useState([]);
     const [livereq, setlivereq] = useState(false);
     const [friends, setfriends] = useState([]);
 
+    // Establishing socket connections and handling cleanup on component unmount
     useEffect(() => {
         socket.emit("join_room", user.username);
         return () => {
@@ -16,19 +17,23 @@ function Friend({user,socket}) {
         };
     }, [user.username]);
 
+    // Event handler for input change
     const onchange = (event) => {
         changeid(event.target.value);
     };
 
+    // Socket event listeners for pending friend requests and current friends
     socket.on('getpendingreq',(data)=>{
             addfriendreq(data);
             if(data.length>0) setlivereq(true);
     })
 
+    // Handling current friends received from the server
     socket.on('getcurfriends',(data)=>{
             setfriends(data);
     })
 
+     // Functions for sending, accepting, and deleting friend requests and friends
     const sendRequest = async () => {
         socket.emit('sendrequest',{ to: friendid, from: user.username},(response)=>{
             alert(response);
@@ -36,6 +41,7 @@ function Friend({user,socket}) {
         changeid('');
     };
 
+    // Deleting a friend request
     const deleteRequest = async (index, _id) => {
         socket.emit('deletereq',{id:_id},(response)=>{
             if(response.success) {
@@ -47,6 +53,7 @@ function Friend({user,socket}) {
         })
     };
 
+     // Deleting a friend from the list
     const deletefriend = async (index, _id) => {
         socket.emit('deletefreind',{id:_id,username:user.username},(response)=>{
             if(response.success) {
@@ -57,6 +64,7 @@ function Friend({user,socket}) {
         })
     };
     
+    // Accepting a friend request
     const acceptRequest = async (index, _id) => {
         socket.emit('acceptRequest',{id:_id,username:user.username},(response)=>{
             if(response.success) {
@@ -70,10 +78,11 @@ function Friend({user,socket}) {
     };
 
     const refreq = useRef();
-    const showRequest = () => {
+    const showRequest = () => {     // Function to display friend requests modal
         refreq.current.click();
     };
 
+    // Function to calculate time elapsed since a timestamp
     function timeAgo(timestamp) {
         const now = new Date();
         const seconds = Math.floor((now - timestamp) / 1000);
@@ -96,6 +105,7 @@ function Friend({user,socket}) {
         return 'Just now';
     }
 
+    // JSX structure for rendering friend requests and friend list
     return (
         <>
             <button

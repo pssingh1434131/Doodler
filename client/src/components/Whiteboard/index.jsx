@@ -6,6 +6,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min";
 const roughGenerator = rough.generator();
 
 const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, user, socket, thickness, setThickness }) => {
+   // State declarations
   const [img, setImg] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [mousePointer, setMousePointer] = useState({ x: 0, y: 0, userName: "" });
@@ -14,7 +15,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   const [mouseusername, setmouseusername] = useState('');  const [isEraserActive, setIsEraserActive] = useState(false);
   const [erasedElements, setErasedElements] = useState([]);
   
-
+ // UseEffect hook for emitting mouse move
   useEffect(() => {
     if(showname) {
       setMousePointer({x:mousePointer.x,y:mousePointer.y,userName:mouseusername});
@@ -24,12 +25,14 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     }
   }, [showname,mouseusername]);
 
+  // UseEffect hook for managing show/hide username
   useEffect(() => {
     if(!user.presenter) return;
     let username = !broadcastname?"":user.name;
     socket.emit('changemousemove',{ x: mousePointer.x, y: mousePointer.y, userName: username });
   }, [broadcastname,user]);
 
+  // Function to draw elements on canvas
   const drawElements = useCallback(() => {
     if (!canvasRef.current || !ctxRef.current) {
       return;
@@ -44,9 +47,9 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
       ctxRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     }
 
-    elements.forEach((element) => {
+    // Drawing logic for different shapes
 
-      
+    elements.forEach((element) => {
 
       ctx.lineWidth = element.strokeWidth || thickness;
 
@@ -169,6 +172,8 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     }
   }, [canvasRef, ctxRef, elements, color, mousePointer, thickness]);
  
+
+  // UseEffects for socket events, canvas initialization, and drawing elements
   useEffect(() => {
     socket.on("whiteBoardDataResponse", (data) => {
       setImg(data.imgURL);
@@ -227,9 +232,10 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
   }, [elements, canvasRef, socket, ctxRef, drawElements]);
 
 
-  
-  const handleMouseDown = (e) => {
-    const { offsetX, offsetY } = e.nativeEvent;
+  // Function to handle mouse events
+
+  const handleMouseDown = (e) => {           // Logic to handle mouse down event based on the tool selected
+    const { offsetX, offsetY } = e.nativeEvent;     
     if (tool === "eraser") {
       setIsEraserActive(true);
       // Simulate erasing by drawing a white square
@@ -351,7 +357,7 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     setIsDrawing(true);
 }
 
-  const handleMouseMove = (e) => {
+  const handleMouseMove = (e) => {          // Logic to handle mouse move event based on the tool selected
     const { offsetX, offsetY } = e.nativeEvent;
     let ssusername = showname?user.name:'';        
     setMousePointer({ x: offsetX, y: offsetY, userName: ssusername });
@@ -519,15 +525,20 @@ const Whiteboard = ({ canvasRef, ctxRef, elements, setElements, tool, color, use
     setMousePointer({ x: offsetX, y: offsetY, userName: susername });
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = () => {     // Logic to handle mouse up event
     setIsDrawing(false);
     setIsEraserActive(false);
   };
 
 
-  if (!user?.presenter) {
+  // Conditional rendering based on user role
+
+  if (!user?.presenter) {   
+    // Render for non-presenters
     return (
       <>
+       {/* Render checkbox for showing/hiding name */}
+      {/* Render canvas for the whiteboard */}
         <div className="col-md-8 form-check form-switch px-0 mx-auto">
         <input
           className="form-check-input"
