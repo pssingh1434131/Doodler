@@ -223,10 +223,10 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
         window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareURL}`, "_blank");
     };
 
-    const shareOnInstagram = (imageUrl) => {
+    const shareOnLinkedin = (imageUrl) => {
         const shareText = encodeURIComponent("Check out my awesome drawing!");
         const shareURL = encodeURIComponent(imageUrl);
-        window.open(`https://www.instagram.com/?caption=${shareText}&url=${shareURL}`, "_blank");
+        window.open(`https://www.linkedin.com/shareArticle?mini=true&url=${shareURL}&title=${shareText}`, "_blank");
     };
 
     const shareimage = async (site) => {
@@ -250,16 +250,16 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
             });
 
             const data = await response.json();
-            console.log(data);
             if (data.success) {
                 const imageUrl = data.data.url;
+                navigator.clipboard.writeText(imageUrl);
                 if(site==="facebook"){
                     shareOnFacebook(imageUrl);
                 }
                 else if(site==="twitter"){
                     shareOnTwitter(imageUrl);
                 }else{
-                    shareOnInstagram(imageUrl);
+                    shareOnLinkedin(imageUrl);
                 }
             } else {
                 console.error('Error uploading image to ImgBB:', data.error.message);
@@ -355,9 +355,9 @@ const RoomPage = ({ socket, round, setround, numberofplayer, setplayercount, use
                             <strong>Share Drawing</strong>
                         </button> */}
                         <div className="d-flex align-item-center justify-content-around" style={{ marginRight: '2vw', width: '10vw', zIndex: '1', display:users[myindex].presenter?'block':'none' }}>
-                            <a className="fab fa-facebook" onClick={() => { shareimage("facebook") }} style={{ fontSize: '50px', color: 'white', textDecoration: 'none', cursor: 'pointer' }}></a>
-                            <a className="fab fa-twitter" onClick={() => { shareimage("twitter") }} style={{ fontSize: '50px', color: 'white', textDecoration: 'none', cursor: 'pointer' }}></a>
-                            <a className="fab fa-instagram" onClick={() => { shareimage("instagram") }} style={{ fontSize: '50px', color: 'white', textDecoration: 'none', cursor: 'pointer' }}></a>
+                            <div className="fab fa-facebook" onClick={() => { shareimage("facebook") }} style={{ fontSize: '50px', color: 'white', textDecoration: 'none', cursor: 'pointer' }}></div>
+                            <div className="fab fa-twitter" onClick={() => { shareimage("twitter") }} style={{ fontSize: '50px', color: 'white', textDecoration: 'none', cursor: 'pointer' }}></div>
+                            <div className="fab fa-linkedin" onClick={() => { shareimage("linkedin") }} style={{ fontSize: '50px', color: 'white', textDecoration: 'none', cursor: 'pointer' }}></div>
                         </div>
                     </div>
 

@@ -16,10 +16,10 @@
 "Doodler" is an engaging multiplayer web game where one participant illustrates an object, and fellow players attempt to guess the object's name based on the drawing. Players earn points based on the accuracy of their guesses, fostering an interactive and fun-filled gaming experience.
 
 ### Video Link:-
-https://drive.google.com/drive/folders/1yTQvXK-THX7-PIrDpB6RFuiCEfscyfJ0?usp=sharing
+https://drive.google.com/drive/folders/1ijB97ziIfwLNaNVH4vWFgyzaD0HsueDK
 
 ### Images from site:-
-https://drive.google.com/drive/folders/1TLu3G6X79pXkEANsKEGc0DpnjCaN9rmU?usp=sharing
+https://drive.google.com/drive/folders/122Nu5mHcoJPQwgyVg9vAnTSFg_o1yeo7
 
 ### Current Features:-
 

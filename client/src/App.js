@@ -47,6 +47,7 @@ function App() {
             if (data.numberofplayers) {
                 if (data.users.length == data.numberofplayers) {
                     for (let i = 0; i < data.users.length; i++) {
+                      const user = JSON.parse(localStorage.getItem('user'));
                         if (data.users[i].name === user.username) {
                             setIndex(i);
                             break;

@@ -17,7 +17,6 @@ module.exports.forgotpassword = async(req,res) => {
         const find = await userModel.findOne({email: email});
         if(find) {
             let otp = await generateRandomString(6);
-            console.log(otp);
             let data = await sendmail(email,'Reset Password','Otp for reset password is  '+otp);
             if(data.success) {
                 res.json({success:true,otp:otp});
