@@ -1,18 +1,20 @@
+// Import required modules and packages
 const userModel = require('../model/userModel');
 const onlineUsers = require('../model/onlineUsers');
 const jwt = require('jsonwebtoken');
-const jwt_key = process.env.JWT_KEY;
-const bcrypt = require('bcryptjs');
-const {sendmail} = require('./helper');
+const jwt_key = process.env.JWT_KEY;     // Secret key for JWT
+const bcrypt = require('bcryptjs');      // Password hashing library
+const {sendmail} = require('./helper');  // Helper function to send emails
 
+// Function to generate a random string of a specified length
 async function generateRandomString(length) {
     const cryptoRandomString = await import('crypto-random-string');
     return cryptoRandomString.default({ length: length });
 }
 
-
+// Function to handle forgot password logic
 module.exports.forgotpassword = async(req,res) => {
-    try {
+    try {                                            // Logic to generate OTP and send it via email for password reset
         const {email} = req.body;
         const find = await userModel.findOne({email: email});
         if(find) {
@@ -34,6 +36,7 @@ module.exports.forgotpassword = async(req,res) => {
     }
 }
 
+// Function to reset password
 module.exports.resetpassword = async(req,res) => {
     try {
         const {email,password} = req.body;
@@ -48,8 +51,9 @@ module.exports.resetpassword = async(req,res) => {
     }
 }
 
+// Function to handle email verification
 module.exports.emailverification = async(req,res) => {
-    try {
+    try {                                                       // Logic to generate and send an OTP for email verification
         const {email} = req.body;
         let otp = await generateRandomString(6);
         // console.log(otp);
@@ -60,6 +64,7 @@ module.exports.emailverification = async(req,res) => {
     }
 }
 
+// Function to handle user signup
 module.exports.signup = async(req, res)=>{
     try{
         const {name, username, email, password} = req.body;
@@ -80,6 +85,7 @@ module.exports.signup = async(req, res)=>{
     }
 }
 
+// Function to handle user login
 module.exports.login = async(req, res)=>{
     try{
         const {email, password} = req.body;
@@ -110,6 +116,7 @@ module.exports.login = async(req, res)=>{
     }
 }
 
+// Function to update user's name
 module.exports.updatename = async(req, res)=>{
     try{
         const {name} = req.body;
@@ -123,6 +130,7 @@ module.exports.updatename = async(req, res)=>{
     }
 }
 
+// Function to update user's password
 module.exports.updatepassword = async(req, res)=>{
     try{
         const {oldpassword,newpassword} = req.body;
@@ -145,6 +153,7 @@ module.exports.updatepassword = async(req, res)=>{
     }
 }
 
+// Function to update user's avatar
 module.exports.updateavatar = async(req, res)=>{
     try{
         const {avatar} = req.body;
@@ -158,6 +167,7 @@ module.exports.updateavatar = async(req, res)=>{
     }
 }
 
+
 module.exports.getuser = async(req, res)=>{
     try{
         const user = await userModel.findById({_id:req.id});
@@ -168,6 +178,7 @@ module.exports.getuser = async(req, res)=>{
     }
 }
 
+// Function to get user by username
 module.exports.getuserbyusername = async(username)=>{
     try{
         const user = await userModel.findOne({username:username});
@@ -186,7 +197,7 @@ module.exports.logout = async function logout(req,res)
     return res.json({ success: true});
 }
 
-//protect route
+//protect route: Middleware to protect routes and handle user authentication
 module.exports.protectRoute = async function protectRoute(req,res,next)
 {
     try{
@@ -226,6 +237,7 @@ module.exports.protectRoute = async function protectRoute(req,res,next)
     }
 }
 
+//Function to get online users
 module.exports.getOnlineUsers = async(req, res)=>{
     try{
         const onlineuser = await onlineUsers.find({status:'online'});
@@ -236,6 +248,7 @@ module.exports.getOnlineUsers = async(req, res)=>{
     }
 }
 
+// Function to get lobby users
 module.exports.getLobbyUsers = async(req, res)=>{
     try{
         const lobbyuser = await onlineUsers.find({status:'lobby'});
@@ -246,6 +259,7 @@ module.exports.getLobbyUsers = async(req, res)=>{
     }
 }
 
+// Function to change user status
 module.exports.changeUserStatus = async(req,res)=>{
     try{
         const status = req.body.status;

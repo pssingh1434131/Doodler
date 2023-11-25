@@ -3,14 +3,21 @@ import { useNavigate, Link } from "react-router-dom";
 import Logo from "./Logo";
 
 function Navbar(props) {
+   // State initialization
   const [user, setUser] = useState(null);
   const [showprofile, changeoption] = useState(true);
   const [namechange, changenameoption] = useState(false);
   const [passchange, changepassoption] = useState(false);
   const [imageselect, changeimage] = useState("");
   const [formdata, changeformdata] = useState({ name: "", oldpass: "", pass: "", confpass: "" });
+
+  // Reference initialization
   const ref = useRef(null);
+
+   // Navigate function initialization
   const navigate = useNavigate();
+
+  // Fetching user data from localStorage
   useEffect(() => {
     let userString = localStorage.getItem("user");
     let userData = JSON.parse(userString);
@@ -18,10 +25,12 @@ function Navbar(props) {
     changeformdata((formdata) => ({ ...formdata, name: userData.name }));
   }, [changeformdata, setUser]);
 
+  // Function to open the profile modal
   const profileModal = () => {
     ref.current.click();
   };
 
+  // Function to handle showing/hiding options for updating name
   const updatenameoption = () => {
     if (showprofile === true) {
       if (namechange === false) {
@@ -41,6 +50,7 @@ function Navbar(props) {
     }
   }
 
+  // Function to handle showing/hiding options for updating password
   const updatepassoption = () => {
     if (showprofile === true) {
       if (passchange === false) {
@@ -60,6 +70,7 @@ function Navbar(props) {
     }
   }
 
+  // Function to handle logout
   const logout = async () => {
     const response = await fetch("http://localhost:3001/user/logout", {
       method: "post",
@@ -77,6 +88,7 @@ function Navbar(props) {
     }
   };
 
+   // Function to update user's name on the server
   const updatenameserver = async () => {
     setUser({ ...user, name: formdata.name });
     const response = await fetch("http://localhost:3001/user/updatename", {
@@ -101,6 +113,7 @@ function Navbar(props) {
     changepassoption(false);
   }
 
+  // Function to update user's password on the server
   const updatepassserver = async () => {
     const response = await fetch("http://localhost:3001/user/updatepass", {
       method: "PATCH",
@@ -120,13 +133,15 @@ function Navbar(props) {
       alert("Invalid credentials");
     }
   }
-  const array = Array(10).fill(null);
+  const array = Array(10).fill(null);   // Generating an array of elements
   
+  // Function to handle image selection
   const changeImage = (imagename)=>{
     if(imagename!==imageselect)
     changeimage(imagename)
   }
 
+  // Function to update user's avatar on the server
   const changeimageserver = async ()=>{
     setUser({ ...user, image: imageselect });
     const response = await fetch("http://localhost:3001/user/updateavatar", {
@@ -148,6 +163,8 @@ function Navbar(props) {
     }
     changeimage("");
   }
+
+   // JSX elements representing the Navbar
   return (
     <div
       className="d-flex flex-row align-items-start"
@@ -268,6 +285,7 @@ function Navbar(props) {
   );
 }
 
+// Default prop for chat option
 Navbar.defaultProps = {
   char: true
 };

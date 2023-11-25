@@ -5,14 +5,18 @@ export default function Login() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: "", password: "" });
 
+  // Update email state on input change
   const handleEmailChange = (event) => {
     setFormData({ ...formData, email: event.target.value });
   };
 
+  
+  // Update password state on input change
   const handlePassChange = (event) => {
     setFormData({ ...formData, password: event.target.value });
   };
 
+   // Handle form submission
   const submitForm = async (e) => {
     e.preventDefault();
     const response = await fetch("http://localhost:3001/user/login", {
@@ -31,7 +35,7 @@ export default function Login() {
       alert("Invalid credentials");
     }
   };
-
+// render UI of form
   return (
     <form>
       <div className="my-3" style={{ fontSize: 'calc(1vw + 1vh + 10px)', textDecoration: 'underline', textAlign: 'center' }}>LOGIN</div>

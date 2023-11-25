@@ -4,6 +4,7 @@ import logo from "../logo192.png";
 
 function Loginpage(props) {
   return (
+    
     <div
       className="App d-flex justify-content-around align-items-center"
       style={{ height: "100vh"}}
@@ -16,6 +17,7 @@ function Loginpage(props) {
         Doodler
       </div>
     </header>
+     {/* Signup Component Container */}
       <div
         className="d-flex flex-column align-items-center justify-content-center"
         style={{
@@ -26,6 +28,7 @@ function Loginpage(props) {
           padding:'2vh 0'
         }}
       >
+      {/* Render Signup Component */}
         <Signup />
       </div>
     </div>

@@ -1,3 +1,4 @@
+// Import necessary components and libraries
 import Forgotpassword from "./components/Forgotpassword";
 import Home from "./components/Home";
 import Loginpage from "./components/Loginpage";
@@ -15,7 +16,7 @@ import CollabRoomPage from "./pages/collab_RoomPage"
 import "./App.css";
 import Lobby from "./components/Lobby";
 
-const server = "http://localhost:3001";
+const server = "http://localhost:3001";     // Server URL
 const connectionOptions = {
   "force new connection": true,
   reconnectionAttempts: "Infinity",
@@ -23,22 +24,29 @@ const connectionOptions = {
   transports: ["websocket"],
 };
 
-const socket = io(server, connectionOptions);
+const socket = io(server, connectionOptions);   // Initialize socket connection to the server
 
 function App() {
+  // State variables using useState hook
   const [users, setUsers] = useState([]);
   const [round, setround] = useState(1);
   const [numberofplayer, setplayercount] = useState(2);
   const [myindex, setIndex] = useState(-1);
   const user = JSON.parse(localStorage.getItem('user'));
+
+  // Custom PrivateRoute component to handle private routes
   const PrivateRoute = ({ element, path }) => {
     const user = JSON.parse(localStorage.getItem('user'));
     return user ? element : <Navigate to="/" />;
   };
+
+  // Custom PublicRoute component to handle public routes
   function PublicRoute({ element }) {
     const user = JSON.parse(localStorage.getItem('user'));
     return user ? <Navigate to="/home" /> : element;
   }
+
+   // useEffect hook to manage socket event listeners and cleanup
   useEffect(() => {
     const handleUserJoined = (data) => {
         if (data.success) {
@@ -84,11 +92,13 @@ function App() {
         setUsers((prevUsers) => prevUsers.filter((user) => user.name !== data));
     };
 
+    // Event listeners for socket events
     socket.on("userIsJoined", handleUserJoined);
     socket.on("allUsers", handleAllUsers);
     socket.on("userJoinedMessageBroadcasted", handleUserJoinedMessage);
     socket.on("userLeftMessageBroadcasted", handleUserLeftMessage);
     
+    // Cleanup - removing event listeners when component unmounts
     return () => {
         socket.off("userIsJoined", handleUserJoined);
         socket.off("allUsers", handleAllUsers);
@@ -96,6 +106,8 @@ function App() {
         socket.off("userLeftMessageBroadcasted", handleUserLeftMessage);
     };
 }, [socket]);
+
+// Function to generate UUID
   const uuid = () => {
     let S4 = () => {
       return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
@@ -115,11 +127,13 @@ function App() {
       S4()
     );
   };
+
+   // Rendering component with React Router setup
   return (
     <>
-      <ToastContainer />
+      <ToastContainer />         {/* Notification container for toasts */}
       <BrowserRouter>
-        <Routes>
+        <Routes>                  {/* Define routes for different components */}
           <Route
             path="/"
             element={<PublicRoute element={<Loginpage />} />}
@@ -164,5 +178,5 @@ function App() {
     </>
   );
 }
-
-export default App;
+  
+export default App;    // Export the main App component

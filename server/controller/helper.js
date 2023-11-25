@@ -1,6 +1,9 @@
 const nodemailer = require("nodemailer");
+
+// Function to send an email
 module.exports.sendmail = async (email,subject,bodystring) => {
     try {
+       // Creating a transporter with nodemailer
       const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 587,
@@ -11,12 +14,16 @@ module.exports.sendmail = async (email,subject,bodystring) => {
           pass: 'fiheqhpgcqelqoct'
         }
       });
+
+      // Mail options for sending the email
       const mailOptions = {
         from: 'SmiFe2023178909@gmail.com',
         to: email,
         subject: subject,
         html: '<h1>From Doodler</h1><h2>'+bodystring+'</h2>'
       }
+
+      // Sending the email
       transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
           console.log(error);

@@ -11,14 +11,21 @@ const Forms = ({ uuid, socket, numberofplayer, setplayercount }) => {
   const [roomId, setRoomId] = useState(uuid());
   const [friends, setfriends] = useState([]);
   const user = JSON.parse(localStorage.getItem('user'));
+
   useEffect(() => {
+    // Emit 'join_room' event with the username when user.username changes
     socket.emit("join_room", user.username);
   }, [user.username]);
-  socket.on('getcurfriends', (data) => {
+
+  // Listen for 'getcurfriends' event and update friends state
+  socket.on('getcurfriends', (data) => {    
     setfriends(data);
   })
   useEffect(() => {
+     // Update user status to 'online' when component mounts
     updateStatus('online');
+
+     // Clear local storage data when component mounts
     localStorage.removeItem("blocked");
     localStorage.removeItem("badwordcnt");
     localStorage.removeItem("gamechat");
@@ -27,6 +34,7 @@ const Forms = ({ uuid, socket, numberofplayer, setplayercount }) => {
       updateStatus('offline');
     };
 
+    // Event listener for beforeunload to update status
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
@@ -36,12 +44,14 @@ const Forms = ({ uuid, socket, numberofplayer, setplayercount }) => {
   }, []);
 
   const sendinvite = async(username) => {
+     // Prepare invitation data
     const data = {
-      from: user.username,
-      to: username,
-      msg: `Join my room to play Doodler with me: ${roomId}`,
+      from: user.username, // Sender's username
+      to: username,  // Receiver's username
+      msg: `Join my room to play Doodler with me: ${roomId}`,   // Receiver's username
       date: Date.now()
     }
+    // Send invitation via HTTP POST request
     const response = await fetch("http://localhost:3001/user/sendinvite", {
       method: 'POST',
       headers: {
@@ -50,6 +60,8 @@ const Forms = ({ uuid, socket, numberofplayer, setplayercount }) => {
       credentials: 'include',
       body: JSON.stringify(data)
     });
+    
+    // Handle the response from the server
     const json = await response.json();
     if (json.success) {
       alert(`Invite sent to ${username}`);
@@ -58,6 +70,7 @@ const Forms = ({ uuid, socket, numberofplayer, setplayercount }) => {
     }
   }
 
+ // Cleanup: Update status to 'offline' and remove event listener
   return (
     <>
       <Link to="/home" style={{ width: '0px', minWidth: 'fit-content', margin: '0px 2vw', position: 'absolute' }} ><button className='btn btn-secondary' style={{ width: '8vw', margin: '3vh 0px' }} > &laquo; BACK</button></Link>

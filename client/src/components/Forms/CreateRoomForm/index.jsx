@@ -5,21 +5,29 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min"
 
 const CreateRoomForm = ({ roomId, setRoomId, uuid, socket, user, numberofplayer, setplayercount }) => {
+     // Extract username from user object
     const name = user.username;
+     // State to handle the number of players locally
     const [localNumberofplayer, setLocalNumberofplayer] = useState(numberofplayer);
 
+    // React Router hook to handle navigation
     const navigate = useNavigate();
 
+     // Function to handle the creation of a room
     const handleCreateRoom = (e) => {
         e.preventDefault();
+        // Validation checks for name and number of players
         if (!name) return toast.dark("Please enter your name!");
         if (localNumberofplayer > 5 || localNumberofplayer < 2) {
             setplayercount(2);
             alert("Number of players should be between 2 and 5");
             return;
         }
+        // Set the number of players
         setplayercount(parseInt(localNumberofplayer, 10));
         let numberofplayer = parseInt(localNumberofplayer, 10);
+
+        // Prepare room data to be emitted to the server
         const roomData = {
             name,
             roomId,
@@ -29,10 +37,11 @@ const CreateRoomForm = ({ roomId, setRoomId, uuid, socket, user, numberofplayer,
             presenter: false,
             score: 0,
         };
+        // Emit event to the server indicating user joined and room data
         socket.emit("userJoined", { roomData, numberofplayer });
-        navigate(`/${roomId}`);
+        navigate(`/${roomId}`);           // Navigate to the room with the generated roomId
     };
-
+ // JSX form for creating a room
     return (
         <form className="form w-100 mt-4">
             <div className="form-group">
